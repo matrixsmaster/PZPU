@@ -14,10 +14,12 @@
 #include <sys/timeb.h>
 #include <memory.h>
 #include "VM86conf.h"
+#include "MRAM.h"
 
 class VM86 {
 protected:
-	unsigned char mem[RAM_SIZE], io_ports[IO_PORT_COUNT];
+//	unsigned char mem[RAM_SIZE], io_ports[IO_PORT_COUNT];
+	RAM mem, io_ports;
 	unsigned char *opcode_stream, *regs8;
 	unsigned char i_rm, i_w, i_reg, i_mod, i_mod_size, i_d, i_reg4bit;
 	unsigned char raw_opcode_id, xlat_opcode_id, extra;
@@ -116,6 +118,6 @@ public:
 #define CAST(a) *(a*)&
 
 // Keyboard driver for console. This may need changing for UNIX/non-UNIX platforms
-#define KEYBOARD_DRIVER read(0, mem + 0x4A6, 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7))
+#define KEYBOARD_DRIVER read(0, &(mem[0x4A6]), 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7))
 
 #endif /* VM86_H_ */

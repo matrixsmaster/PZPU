@@ -13,11 +13,11 @@
 //#define FILENAME_LENGTH 128
 
 // Emulator system constants
-#define IO_PORT_COUNT 0x10000
-#define RAM_SIZE 0x10FFF0
-#define REGS_BASE 0xF0000
-#define VIDEO_RAM_SIZE 0x10000
-#define NUMVDISKS 0x2
+#define IO_PORT_COUNT	0x10000
+#define RAM_SIZE 		0x10FFF0
+#define REGS_BASE		0xF0000
+#define VIDEO_RAM_SIZE	0x10000
+#define NUMVDISKS		0x2
 
 // Graphics/timer/keyboard update delays (explained later)
 #ifndef GRAPHICS_UPDATE_DELAY

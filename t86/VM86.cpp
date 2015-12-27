@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include "VM86.h"
 #include "VM86bios.h"
+#include <stdlib.h>
 
 VM86::VM86()
 {
@@ -51,6 +52,7 @@ void VM86::Reset()
 
 	// Open floppy disk image (disk[1]), and hard disk image (disk[0]) if specified
 	disk[1] = open("fd.raw", 32898);
+	if (disk[1] < 0) abort(); //FIXME
 	disk[0] = 0;
 
 	// Set CX:AX equal to the hard disk image size, if present
@@ -268,7 +270,7 @@ void VM86::Run()
 	while (!pause) {
 		// Check the finishing condition. Terminates if CS:IP = 0:0
 		opcode_stream = mem + 16 * regs16[REG_CS] + reg_ip;
-		if (opcode_stream == mem) pause = 2;
+		if (regs16[REG_CS] + reg_ip == 0) pause = 2;
 		// Do an actual step
 		Step();
 	}

@@ -3,7 +3,7 @@
 #
 # This work is licensed under the MIT License. See included LICENSE.TXT.
 
-CXXFLAGS=-O2 -Wall -Wsign-compare -DNO_GRAPHICS
+CXXFLAGS=-O0 -Wall -Wsign-compare -DNO_GRAPHICS -g
 
 APP=t86
 OBJS=VM86.o VM86EU.o VM86L.o test.o

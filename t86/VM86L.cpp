@@ -10,13 +10,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "VM86.h"
+#include <stdio.h>
 
 void VM86::LocalOpcode()
 {
 	switch ((char)i_data0)
 	{
 		OPCODE_CHAIN 0: // PUTCHAR_AL
-			write(1, regs8, 1)
+			write(1, regs8, 1);
+			printf("byte out: %hhu\n",regs8[0]);
 
 		OPCODE 1: // GET_RTC
 			time(&clock_buf);
