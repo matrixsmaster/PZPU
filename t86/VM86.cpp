@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include "VM86.h"
 #include "VM86bios.h"
-#include <stdlib.h>
+#include <stdlib.h> //FIXME: abort()
 
 VM86::VM86()
 {

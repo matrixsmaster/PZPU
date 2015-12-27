@@ -14,13 +14,19 @@
 #include <sys/timeb.h>
 #include <memory.h>
 #include "VM86conf.h"
+
+#ifdef MRAM_TEST
 #include "MRAM.h"
+#endif
 
 class VM86 {
 protected:
-//	unsigned char mem[RAM_SIZE], io_ports[IO_PORT_COUNT];
+#ifndef MRAM_TEST
+	unsigned char mem[RAM_SIZE], io_ports[IO_PORT_COUNT];
+#else
 	RAM mem, io_ports;
-	unsigned char *opcode_stream, *regs8;
+#endif
+	unsigned char *opcode_stream,*regs8;
 	unsigned char i_rm, i_w, i_reg, i_mod, i_mod_size, i_d, i_reg4bit;
 	unsigned char raw_opcode_id, xlat_opcode_id, extra;
 	unsigned char rep_mode;
@@ -118,6 +124,10 @@ public:
 #define CAST(a) *(a*)&
 
 // Keyboard driver for console. This may need changing for UNIX/non-UNIX platforms
+#ifdef USE_RAW_OUTPUT
 #define KEYBOARD_DRIVER read(0, &(mem[0x4A6]), 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7))
+#else
+#define KEYBOARD_DRIVER 1 /*nothing to do, keyboard disabled because terminal is in blocking mode*/
+#endif
 
 #endif /* VM86_H_ */

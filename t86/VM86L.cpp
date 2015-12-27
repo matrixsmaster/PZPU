@@ -10,15 +10,25 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "VM86.h"
+
+#ifndef USE_RAW_OUTPUT
 #include <stdio.h>
+#include <ctype.h>
+#endif
 
 void VM86::LocalOpcode()
 {
 	switch ((char)i_data0)
 	{
 		OPCODE_CHAIN 0: // PUTCHAR_AL
+#ifndef USE_RAW_OUTPUT
+			if ((*regs8 == 10 || *regs8 == 13) || isprint(*regs8))
+				putchar(*regs8);
+			else
+				printf("byte out: %hhu\n",*regs8);
+#else
 			write(1, regs8, 1);
-			printf("byte out: %hhu\n",regs8[0]);
+#endif
 
 		OPCODE 1: // GET_RTC
 			time(&clock_buf);

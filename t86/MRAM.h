@@ -4,86 +4,32 @@
 #define MRAM_H_
 
 #include "VM86conf.h"
+#include <iostream>
 
-#define MRAMQUEUE 65536
+#define MRAMDEPTH 0
+#define MRAMQUEUE 768
 
 typedef unsigned char uch;
 
-/* Testing managed RAM unit */
-/*
-class RAM
-{
-private:
-	uch mem[RAM_SIZE];
-
-protected:
-	uch que[MRAMQUEUE];
-	int last;
-	uch scr,old;
-	bool wr,wq;
-
-	void Test() {
-		if (wr) {
-			wr = false;
-			if (old != scr)
-				mem[last] = scr;
-		}
-		if (wq) {
-			wq = false;
-			memcpy(mem+last,que,sizeof(que));
-		}
-	}
-
-public:
-	RAM() {
-		memset(mem,0,sizeof(mem));
-		memset(que,0,sizeof(que));
-		last = 0;
-		scr = 0;
-		old = 0;
-		wr = wq = false;
-	}
-
-	int Max() const { return RAM_SIZE; }
-
-	uch & operator [] (const int a) {
-		Test();
-		if ((a >= 0) && (a < RAM_SIZE)) {
-			last = a;
-			old = scr = mem[a];
-			wr = true;
-		} else {
-			last = 0;
-			old = scr = 0;
-		}
-		return scr;
-	}
-
-	uch * operator + (const int s) {
-		Test();
-		if ((s < 0) || (s >= RAM_SIZE))
-			return NULL;
-		last = s;
-		wq = true;
-		memcpy(que,mem+last,sizeof(que));
-		return que;
-	}
-};
-*/
-#include <iostream>
-#define MRAMDEPTH 16
 using namespace std;
+
+/* Testing managed RAM unit (quick and dirty) */
+
 class RAM
 {
 private:
 	uch mem[RAM_SIZE];
 
 protected:
-	uch que[MRAMDEPTH][MRAMQUEUE];
 	int last;
-	int ql[MRAMDEPTH];
 	uch scr,old;
-	bool wr,wq;
+	bool wr;
+
+#if MRAMDEPTH > 0
+	bool wq;
+	uch que[MRAMDEPTH][MRAMQUEUE];
+	int ql[MRAMDEPTH];
+#endif
 
 	void Test() {
 		if (wr) {
@@ -91,8 +37,8 @@ protected:
 			if (old != scr)
 				mem[last] = scr;
 		}
+#if MRAMDEPTH > 0
 		if (wq) {
-			cout << "Copying" << endl;
 			wq = false;
 			for (int i = 0; i < MRAMDEPTH; i++)
 				if (ql[i] >= 0) {
@@ -100,18 +46,24 @@ protected:
 					//ql[i] = -1;
 				}
 		}
+#endif
 	}
 
 public:
 	RAM() {
 		memset(mem,0,sizeof(mem));
-		memset(que,0,sizeof(que));
 		last = 0;
 		scr = 0;
 		old = 0;
-		wr = wq = false;
+		wr = false;
+
+#if MRAMDEPTH > 0
+		memset(que,0,sizeof(que));
+		wq = false;
 		for (int i = 0; i < MRAMDEPTH; i++)
 			ql[i] = -1;
+#endif
+
 	}
 
 	int Max() const { return RAM_SIZE; }
@@ -130,6 +82,7 @@ public:
 		}
 	}
 
+#if MRAMDEPTH > 0
 	uch * operator + (const int s) {
 		int i;
 
@@ -150,14 +103,31 @@ public:
 			}
 		}
 
-		if (wq)
-			cout << "Copied" << endl;
-		else {
+		if (!wq) {
 			cout << "No room left for operation" << endl;
 			return NULL;
 		}
 
 		return &(que[i][0]);
 	}
+#endif
 };
+
+/*
+class RAMptr
+{
+private:
+	RAM* ram;
+	int off;
+
+public:
+//	RAMptr() { ram = NULL; off = 0; }
+//	RAMptr(RAM* p) { ram = p; off = 0; }
+	RAMptr(RAM* p = NULL, int o = 0) { ram = p; off = o; }
+
+	RAMptr operator + (const int s) { return RAMptr(ram,off+s); }
+	RAMptr & operator += (const int s) { off += s; return &this; }
+};
+*/
+
 #endif /* MRAM_H_ */
