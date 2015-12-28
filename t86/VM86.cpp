@@ -19,6 +19,8 @@ VM86::VM86()
 	memset(disk,0,sizeof(disk));
 	pause = 0;
 
+	//TODO: init stream, reg8/16
+
 	Reset();
 }
 

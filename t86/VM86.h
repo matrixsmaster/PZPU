@@ -23,17 +23,21 @@ class VM86 {
 protected:
 #ifndef MRAM_TEST
 	unsigned char mem[RAM_SIZE], io_ports[IO_PORT_COUNT];
+	unsigned char *opcode_stream,*regs8;
+	unsigned short *regs16;
 #else
 	RAM mem, io_ports;
+	RAMptr<uch> opcode_stream,regs8;
+	RAMptr<unsigned short> regs16;
 #endif
-	unsigned char *opcode_stream,*regs8;
+
 	unsigned char i_rm, i_w, i_reg, i_mod, i_mod_size, i_d, i_reg4bit;
 	unsigned char raw_opcode_id, xlat_opcode_id, extra;
 	unsigned char rep_mode;
 	unsigned char seg_override_en, rep_override_en;
 	unsigned char trap_flag, int8_asap, scratch_uchar, io_hi_lo, *vid_mem_base, spkr_en;
 	unsigned char bios_table_lookup[20][256];
-	unsigned short *regs16, reg_ip, seg_override;
+	unsigned short reg_ip, seg_override;
 	unsigned short file_index, wave_counter;
 	unsigned int op_source, op_dest, rm_addr, op_to_addr, op_from_addr;
 	unsigned int i_data0, i_data1, i_data2;
