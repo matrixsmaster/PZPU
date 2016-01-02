@@ -18,8 +18,11 @@ VM86::VM86()
 	memcpy(cga_colors,cga_colors_table,sizeof(cga_colors));
 	memset(disk,0,sizeof(disk));
 	pause = 0;
+
+#ifdef MRAM_TEST
 	io_ports.Segment(RAM_SIZE+1);
 	opcode_stream.Ram(&mem);
+#endif
 
 	Reset();
 }
@@ -42,14 +45,16 @@ void VM86::Reset()
 	CloseDD();
 
 	// regs16 and reg8 point to F000:0, the start of memory-mapped registers. CS is initialised to F000
-//	regs16 = (unsigned short *)(regs8 = mem + REGS_BASE);
+#ifndef MRAM_TEST
+	regs16 = (unsigned short *)(regs8 = mem + REGS_BASE);
+#else
 	regs8.Reset();
 	regs8.Ram(&mem);
 	regs8 += REGS_BASE;
 	regs16.Reset();
 	regs16.Ram(&mem_us);
 	regs16 += REGS_BASE/2;
-
+#endif
 	regs16[REG_CS] = 0xF000;
 
 	// Trap flag off
@@ -65,13 +70,20 @@ void VM86::Reset()
 	disk[0] = 0;
 
 	// Set CX:AX equal to the hard disk image size, if present
+#ifndef MRAM_TEST
 	CAST(unsigned)regs16[REG_AX] = *disk ? lseek(*disk, 0, 2) >> 9 : 0;
+#else
+	regs16[REG_AX] = 0; //no hdd
+#endif
 
 	// Load BIOS image into F000:0100, and set IP to 0100
 	reg_ip = 0x100;
-	RAMptr<uch> tmp(&mem);
-	tmp += reg_ip;
+#ifdef MRAM_TEST
+	RAMptr<uch> tmp = regs8 + reg_ip;
 	my_memcpy(&tmp, bios, bios_len);
+#else
+	memcpy(regs8 + reg_ip, bios, bios_len);
+#endif
 
 	// Load instruction decoding helper table
 	for (int i = 0; i < 20; i++)
@@ -281,7 +293,11 @@ void VM86::Run()
 {
 	while (!pause) {
 		// Check the finishing condition. Terminates if CS:IP = 0:0
+#ifdef MRAM_TEST
 		opcode_stream = 16 * regs16[REG_CS] + reg_ip;
+#else
+		opcode_stream = mem + 16 * regs16[REG_CS] + reg_ip;
+#endif
 		if (regs16[REG_CS] + reg_ip == 0) pause = 2;
 		// Do an actual step
 		Step();

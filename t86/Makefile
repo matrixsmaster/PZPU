@@ -9,7 +9,7 @@ CXXFLAGS=-O0 -Wall -Wsign-compare -DNO_GRAPHICS -g
 APP=t86
 OBJS=VM86.o VM86EU.o VM86L.o emem.o test.o
 
-all: $(OBJS) bios
+all: bios $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(APP)
 
 %.o: %.cpp

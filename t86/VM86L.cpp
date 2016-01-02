@@ -16,6 +16,7 @@
 #include <ctype.h>
 #endif
 
+#ifdef MRAM_TEST
 void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len)
 {
 	unsigned i;
@@ -44,10 +45,15 @@ ssize_t my_write(int id, RAMptr<uch>* p, size_t n)
 	}
 	return i;
 }
+#endif
 
 void VM86::LocalOpcode()
 {
+#ifdef MRAM_TEST
 	RAMptr<uch> tmp(&mem,SEGREG(REG_ES, REG_BX,));
+#else
+	unsigned char* tmp = mem + SEGREG(REG_ES, REG_BX,);
+#endif
 
 	switch ((char)i_data0)
 	{
@@ -64,17 +70,29 @@ void VM86::LocalOpcode()
 		OPCODE 1: // GET_RTC
 			time(&clock_buf);
 			ftime(&ms_clock);
+#ifdef MRAM_TEST
 			my_memcpy(&tmp, localtime(&clock_buf), sizeof(struct tm));
+#else
+			memcpy(tmp, localtime(&clock_buf), sizeof(struct tm));
+#endif
 			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = ms_clock.millitm;
 
 		OPCODE 2: // DISK_READ
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
+#ifdef MRAM_TEST
 				? (int)my_read(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
+#else
+				? (int)read(disk[regs8[REG_DL]], tmp, regs16[REG_AX])
+#endif
 				: 0;
 
 		OPCODE 3: // DISK_WRITE
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
+#ifdef MRAM_TEST
 				? (int)my_write(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
+#else
+				? (int)write(disk[regs8[REG_DL]], tmp, regs16[REG_AX])
+#endif
 				: 0;
 	}
 }

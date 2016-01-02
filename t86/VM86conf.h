@@ -11,7 +11,7 @@
 #define VM86CONF_H_
 
 //#define FILENAME_LENGTH 128
-#define MRAM_TEST 1
+//#define MRAM_TEST 1
 //#define USE_RAW_OUTPUT 1
 
 // Emulator system constants

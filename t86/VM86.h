@@ -76,7 +76,9 @@ public:
 	int GetState()		const	{ return pause; }
 };
 
+#ifdef MRAM_TEST
 void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
+#endif
 
 // Helper macros
 
@@ -129,6 +131,7 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 
 // Reinterpretation cast
 #define CAST(a) *(a*)&
+//#define CAST(a) (a)
 
 // Keyboard driver for console. This may need changing for UNIX/non-UNIX platforms
 #ifdef USE_RAW_OUTPUT

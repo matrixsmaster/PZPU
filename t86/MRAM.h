@@ -76,6 +76,7 @@ public:
 	RAMptr & operator += (const int s) { off += s; return *this; }
 	RAMptr & operator -= (const int s) { off -= s; return *this; }
 	RAMptr & operator = (int a) { off = a; return *this; }
+	RAMptr & operator = (const RAMptr & x) { ram = x.ram; off = x.off; return *this; }
 
 	T & operator [] (const int s) { return (*ram)[off+s]; }
 	T & operator * (void) { return (*ram)[off]; }
