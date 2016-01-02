@@ -3,7 +3,7 @@
 //
 // Revision 1.25
 //
-// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015
+// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015-2016
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
@@ -26,8 +26,9 @@ protected:
 	unsigned char *opcode_stream,*regs8;
 	unsigned short *regs16;
 #else
-	RAM mem, io_ports;
+	RAM<uch> mem, io_ports;
 	RAMptr<uch> opcode_stream,regs8;
+	RAM<unsigned short> mem_us;
 	RAMptr<unsigned short> regs16;
 #endif
 
@@ -74,6 +75,8 @@ public:
 	void Pause();
 	int GetState()		const	{ return pause; }
 };
+
+void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 
 // Helper macros
 

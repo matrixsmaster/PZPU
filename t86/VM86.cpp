@@ -3,7 +3,7 @@
 //
 // Revision 1.25
 //
-// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015
+// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015-2016
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
@@ -18,8 +18,8 @@ VM86::VM86()
 	memcpy(cga_colors,cga_colors_table,sizeof(cga_colors));
 	memset(disk,0,sizeof(disk));
 	pause = 0;
-
-	//TODO: init stream, reg8/16
+	io_ports.Segment(RAM_SIZE+1);
+	opcode_stream.Ram(&mem);
 
 	Reset();
 }
@@ -42,7 +42,14 @@ void VM86::Reset()
 	CloseDD();
 
 	// regs16 and reg8 point to F000:0, the start of memory-mapped registers. CS is initialised to F000
-	regs16 = (unsigned short *)(regs8 = mem + REGS_BASE);
+//	regs16 = (unsigned short *)(regs8 = mem + REGS_BASE);
+	regs8.Reset();
+	regs8.Ram(&mem);
+	regs8 += REGS_BASE;
+	regs16.Reset();
+	regs16.Ram(&mem_us);
+	regs16 += REGS_BASE/2;
+
 	regs16[REG_CS] = 0xF000;
 
 	// Trap flag off
@@ -61,7 +68,10 @@ void VM86::Reset()
 	CAST(unsigned)regs16[REG_AX] = *disk ? lseek(*disk, 0, 2) >> 9 : 0;
 
 	// Load BIOS image into F000:0100, and set IP to 0100
-	memcpy(regs8 + (reg_ip = 0x100), bios, bios_len);
+	reg_ip = 0x100;
+	RAMptr<uch> tmp(&mem);
+	tmp += reg_ip;
+	my_memcpy(&tmp, bios, bios_len);
 
 	// Load instruction decoding helper table
 	for (int i = 0; i < 20; i++)
@@ -271,7 +281,7 @@ void VM86::Run()
 {
 	while (!pause) {
 		// Check the finishing condition. Terminates if CS:IP = 0:0
-		opcode_stream = mem + 16 * regs16[REG_CS] + reg_ip;
+		opcode_stream = 16 * regs16[REG_CS] + reg_ip;
 		if (regs16[REG_CS] + reg_ip == 0) pause = 2;
 		// Do an actual step
 		Step();

@@ -3,7 +3,7 @@
 //
 // Revision 1.25
 //
-// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015
+// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015-2016
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
@@ -86,5 +86,7 @@
 #define FLAGS_UPDATE_OC_LOGIC 4
 
 static const unsigned short cga_colors_table[] = {0 /* Black */, 0x1F1F /* Cyan */, 0xE3E3 /* Magenta */, 0xFFFF /* White */};
+
+typedef unsigned char uch;
 
 #endif /* VM86CONF_H_ */

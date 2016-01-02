@@ -1,70 +1,84 @@
-// (C) Dmitry 'MatrixS_Master' Soloviov, 2015
+// (C) Dmitry 'MatrixS_Master' Soloviov, 2015-2016
 
 #ifndef MRAM_H_
 #define MRAM_H_
 
 #include "VM86conf.h"
-
-typedef unsigned char uch;
+#include "emem.h"
 
 /* Testing managed RAM unit (quick and dirty) */
 
-class RAM
+template <class T> class RAM
 {
 private:
-	uch mem[RAM_SIZE];
+	int seg;
 	int last;
-	uch scr,old;
+	T scr,old,tmp;
 	bool wr;
 
+	//FIXME: byte/word only!
+	T inline _rd(const int a) {
+		if (sizeof(T) == 2) {
+			tmp = (T)(mem_rd(seg+a*2+1)) << 8;
+			tmp |= (T)(mem_rd(seg+a*2));
+		} else {
+			tmp = mem_rd(seg+a);
+		}
+		return tmp;
+	}
+
+	void inline _wr(const int a, const T x) {
+		if (sizeof(T) == 2) {
+			mem_wr(seg+a*2,(x&255));
+			mem_wr(seg+a*2+1,(x >> 8));
+		} else {
+			mem_wr(seg+a,x);
+		}
+	}
+
 public:
-	RAM() {
-		memset(mem,0,sizeof(mem));
+	RAM(const int s = 0) {
+		seg = s;
 		last = 0;
 		scr = 0;
 		old = 0;
+		tmp = 0;
 		wr = false;
-//		cout << "RAM init OK" << endl;
 	}
 
-	int Max() const { return RAM_SIZE; }
+	void Segment(int s) { seg = s; }
+	int Segment(void) { return seg; }
 
-	uch & operator [] (const int a) {
-//		cout << "[]" << endl;
-		if (wr) {
-//			cout << "Flag" << endl;
-			wr = false;
-			if (old != scr) {
-				mem[last] = scr;
-//				cout << "Wrote" << endl;
-			}
-		}
-		if ((a >= 0) && (a < RAM_SIZE)) {
-			last = a;
-			old = scr = mem[a];
-			wr = true;
-			return scr;
-		} else {
-			last = 0;
-			old = scr = 0;
-			return scr;
-		}
+	T & operator [] (const int a) {
+		if (old != scr) _wr(last,scr);
+		last = a;
+		old = scr = _rd(a);
+		return scr;
 	}
 };
 
-class RAMptr
+template <class T> class RAMptr
 {
 private:
-	RAM* ram;
+	RAM<T> * ram;
 	int off;
 
 public:
-	RAMptr(RAM* p = NULL, int o = 0) { ram = p; off = o; }
+	RAMptr(RAM<T> * p = NULL, int o = 0) { ram = p; off = o; }
+
+	void Ram(RAM<T> * r) { ram = r; }
+	RAM<T> * Ram(void) { return ram; }
+
+	void Reset(void) { ram = NULL; off = 0; }
 
 	RAMptr operator + (const int s) { return RAMptr(ram,off+s); }
+	RAMptr operator - (const int s) { return RAMptr(ram,off-s); }
 	RAMptr & operator += (const int s) { off += s; return *this; }
-	uch & operator [] (const int s) { return (*ram)[off+s]; }
-	uch & operator * (void) { return (*ram)[off]; }
+	RAMptr & operator -= (const int s) { off -= s; return *this; }
+	RAMptr & operator = (int a) { off = a; return *this; }
+
+	T & operator [] (const int s) { return (*ram)[off+s]; }
+	T & operator * (void) { return (*ram)[off]; }
 };
 
 #endif /* MRAM_H_ */

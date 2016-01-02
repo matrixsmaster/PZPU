@@ -3,7 +3,7 @@
 //
 // Revision 1.25
 //
-// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015
+// Changed by Dmitry 'MatrixS_Master' Soloviov, 2015-2016
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
@@ -16,8 +16,39 @@
 #include <ctype.h>
 #endif
 
+void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len)
+{
+	unsigned i;
+	const uch* ptr = (const uch*)src;
+	for (i = 0; i < len; i++)
+		(*p)[i] = ptr[i];
+	printf("memcpy(): %u bytes copied\n",i);
+}
+
+ssize_t my_read(int id, RAMptr<uch>* p, size_t n)
+{
+	unsigned i;
+	uch tmp;
+	for (i = 0; i < n; ) {
+		if (read(id,&tmp,1) == 1) (*p)[i++] = tmp;
+		else break;
+	}
+	return i;
+}
+
+ssize_t my_write(int id, RAMptr<uch>* p, size_t n)
+{
+	unsigned i;
+	for (i = 0; i < n; ) {
+		if (read(id,&((*p)[i++]),1) != 1) break;
+	}
+	return i;
+}
+
 void VM86::LocalOpcode()
 {
+	RAMptr<uch> tmp(&mem,SEGREG(REG_ES, REG_BX,));
+
 	switch ((char)i_data0)
 	{
 		OPCODE_CHAIN 0: // PUTCHAR_AL
@@ -33,17 +64,17 @@ void VM86::LocalOpcode()
 		OPCODE 1: // GET_RTC
 			time(&clock_buf);
 			ftime(&ms_clock);
-			memcpy(mem + SEGREG(REG_ES, REG_BX,), localtime(&clock_buf), sizeof(struct tm));
+			my_memcpy(&tmp, localtime(&clock_buf), sizeof(struct tm));
 			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = ms_clock.millitm;
 
 		OPCODE 2: // DISK_READ
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
-				? (int)read(disk[regs8[REG_DL]], mem + SEGREG(REG_ES, REG_BX,), regs16[REG_AX])
+				? (int)my_read(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
 				: 0;
 
 		OPCODE 3: // DISK_WRITE
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
-				? (int)write(disk[regs8[REG_DL]], mem + SEGREG(REG_ES, REG_BX,), regs16[REG_AX])
+				? (int)my_write(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
 				: 0;
 	}
 }
