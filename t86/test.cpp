@@ -12,9 +12,16 @@
 
 using namespace std;
 
+#define PRNSIZEMACRO(a) cout << "\t" #a " = " << sizeof(a) << endl;
+
 int main(int argc, char* argv[])
 {
 	VM86 vm;
+
+	cout << "Type sizes:" << endl;
+	PRNSIZEMACRO(unsigned);
+	PRNSIZEMACRO(unsigned short);
+	PRNSIZEMACRO(unsigned char);
 
 	cout << "Running..." << endl;
 	vm.Run();

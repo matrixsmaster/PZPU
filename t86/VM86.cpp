@@ -84,11 +84,6 @@ void VM86::Reset()
 #else
 	memcpy(regs8 + reg_ip, bios, bios_len);
 #endif
-
-	// Load instruction decoding helper table
-	for (int i = 0; i < 20; i++)
-		for (int j = 0; j < 256; j++)
-			bios_table_lookup[i][j] = regs8[regs16[0x81 + i] + j];
 }
 
 // Set carry flag
@@ -124,24 +119,24 @@ void VM86::make_flags()
 {
 	scratch_uint = 0xF002; // 8086 has reserved and unused flags set to 1
 	for (int i = 9; i--;)
-		scratch_uint += regs8[FLAG_CF + i] << bios_table_lookup[TABLE_FLAGS_BITFIELDS][i];
+		scratch_uint += regs8[FLAG_CF + i] << lookup_table[TABLE_FLAGS_BITFIELDS][i];
 }
 
 // Set emulated CPU FLAGS register from regs8[FLAG_xx] values
 void VM86::set_flags(int new_flags)
 {
 	for (int i = 9; i--;)
-		regs8[FLAG_CF + i] = !!(1 << bios_table_lookup[TABLE_FLAGS_BITFIELDS][i] & new_flags);
+		regs8[FLAG_CF + i] = !!(1 << lookup_table[TABLE_FLAGS_BITFIELDS][i] & new_flags);
 }
 
 // Convert raw opcode to translated opcode index. This condenses a large number of different encodings of similar
 // instructions into a much smaller number of distinct functions, which we then execute
 void VM86::set_opcode(unsigned char opcode)
 {
-	xlat_opcode_id = bios_table_lookup[TABLE_XLAT_OPCODE][raw_opcode_id = opcode];
-	extra = bios_table_lookup[TABLE_XLAT_SUBFUNCTION][opcode];
-	i_mod_size = bios_table_lookup[TABLE_I_MOD_SIZE][opcode];
-	set_flags_type = bios_table_lookup[TABLE_STD_FLAGS][opcode];
+	xlat_opcode_id = lookup_table[TABLE_XLAT_OPCODE][raw_opcode_id = opcode];
+	extra = lookup_table[TABLE_XLAT_SUBFUNCTION][opcode];
+	i_mod_size = lookup_table[TABLE_I_MOD_SIZE][opcode];
+	set_flags_type = lookup_table[TABLE_STD_FLAGS][opcode];
 }
 
 // Execute INT #interrupt_num on the emulated machine
@@ -164,6 +159,175 @@ int VM86::AAA_AAS(char which_operation)
 {
 	return (regs16[REG_AX] += 262 * which_operation*set_AF(set_CF(((regs8[REG_AL] & 0x0F) > 9) || regs8[FLAG_AF])), regs8[REG_AL] &= 0x0F);
 }
+
+// Decode mod, r_m and reg fields in instruction
+void VM86::DecodeRM_REG()
+{
+	scratch2_uint = 4 * !i_mod;
+	op_to_addr = rm_addr = i_mod < 3 ?
+			SEGREG(seg_override_en ? seg_override : lookup_table[scratch2_uint + 3][i_rm], lookup_table[scratch2_uint][i_rm], regs16[lookup_table[scratch2_uint + 1][i_rm]] + lookup_table[scratch2_uint + 2][i_rm] * i_data1+)
+			: GET_REG_ADDR(i_rm);
+	op_from_addr = GET_REG_ADDR(i_reg);
+	if (i_d) {
+		scratch_uint = op_from_addr;
+		op_from_addr = rm_addr;
+		op_to_addr = scratch_uint;
+	}
+}
+#include <stdio.h>
+// [I]MUL/[I]DIV/DAA/DAS/ADC/SBB helpers
+void VM86::MUL()
+{
+//	printf("MUL\n");
+	set_opcode(0x10);
+	if (i_w) {
+		op_result = CAST(unsigned short)mem[rm_addr] * (unsigned short)*regs16;
+	} else {
+		op_result = CAST(unsigned char)mem[rm_addr] * (unsigned char)*regs8;
+	}
+	if (i_w)
+		regs16[i_w + 1] = op_result >> 16;
+	else
+		regs8[i_w + 1] = op_result >> 16;
+	regs16[REG_AX] = op_result;
+	if (i_w)
+		set_OF(set_CF(op_result - (unsigned short)op_result));
+	else
+		set_OF(set_CF(op_result - (unsigned char)op_result));
+}
+
+void VM86::IMUL()
+{
+//	printf("IMUL\n");
+	set_opcode(0x10);
+	if (i_w) {
+		op_result = CAST(short)mem[rm_addr] * (short)*regs16;
+	} else {
+		op_result = CAST(char)mem[rm_addr] * (char)*regs8;
+	}
+	if (i_w)
+		regs16[i_w + 1] = op_result >> 16;
+	else
+		regs8[i_w + 1] = op_result >> 16;
+	regs16[REG_AX] = op_result;
+	if (i_w)
+		set_OF(set_CF(op_result - (short)op_result));
+	else
+		set_OF(set_CF(op_result - (char)op_result));
+}
+
+void VM86::DIV()
+{
+//	printf("DIV\n");
+	if (i_w) {
+		scratch_int = CAST(unsigned short)mem[rm_addr];
+		if (!scratch_int) { pc_interrupt(0); return; }
+		scratch2_uint = (unsigned)(scratch_uint = (regs16[i_w+1] << 16) + regs16[REG_AX]) / scratch_int;
+		if (scratch2_uint - (unsigned short)scratch2_uint) { pc_interrupt(0); return; }
+		regs16[i_w+1] = scratch_uint - scratch_int * (*regs16 = scratch2_uint);
+	} else {
+		scratch_int = CAST(unsigned char)mem[rm_addr];
+		if (!scratch_int) { pc_interrupt(0); return; }
+		scratch2_uint = (unsigned short)(scratch_uint = (regs8[i_w+1] << 16) + regs16[REG_AX]) / scratch_int;
+		if (scratch2_uint - (unsigned char)scratch2_uint) { pc_interrupt(0); return; }
+		regs8[i_w+1] = scratch_uint - scratch_int * (*regs8 = scratch2_uint);
+	}
+}
+
+void VM86::IDIV()
+{
+//	printf("IDIV\n");
+	if (i_w) {
+		scratch_int = CAST(short)mem[rm_addr];
+		if (!scratch_int) { pc_interrupt(0); return; }
+		scratch2_uint = (int)(scratch_uint = (regs16[i_w+1] << 16) + regs16[REG_AX]) / scratch_int;
+		if (scratch2_uint - (short)scratch2_uint) { pc_interrupt(0); return; }
+		regs16[i_w+1] = scratch_uint - scratch_int * (*regs16 = scratch2_uint);
+	} else {
+		scratch_int = CAST(char)mem[rm_addr];
+		if (!scratch_int) { pc_interrupt(0); return; }
+		scratch2_uint = (short)(scratch_uint = (regs8[i_w+1] << 16) + regs16[REG_AX]) / scratch_int;
+		if (scratch2_uint - (char)scratch2_uint) { pc_interrupt(0); return; }
+		regs8[i_w+1] = scratch_uint - scratch_int * (*regs8 = scratch2_uint);
+	}
+}
+
+/*
+ * Decimal adjust After Addition.
+Corrects the result of addition of two packed BCD values.
+
+Algorithm:
+
+if low nibble of AL > 9 or AF = 1 then:
+	AL = AL + 6
+	AF = 1
+if AL > 9Fh or CF = 1 then:
+	AL = AL + 60h
+	CF = 1
+	**********************
+CF_old = CF
+IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+   al = al+6
+   CF = CF or CF_old
+   AF set
+ENDIF
+IF (al > 99h) or (Carry Flag is set)
+   al = al + 60h
+   CF set
+ENDIF
+ */
+void VM86::DAA()
+{
+	printf("DAA\n");
+#if 1
+	if (set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF])) {
+		op_result = regs8[REG_AL] += 6;
+		set_CF(regs8[FLAG_CF] || (regs8[REG_AL] < scratch2_uint));
+	}
+//	set_CF(((regs8[REG_AL] & 0xF0) > 0x90) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] += 0x60);
+	set_CF((regs8[REG_AL] > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] += 0x60);
+#else
+#endif
+}
+
+/*
+ * Decimal adjust After Subtraction.
+Corrects the result of subtraction of two packed BCD values.
+
+Algorithm:
+
+if low nibble of AL > 9 or AF = 1 then:
+	AL = AL - 6
+	AF = 1
+if AL > 9Fh or CF = 1 then:
+	AL = AL - 60h
+	CF = 1
+	*****************
+   CF_old = CF
+IF (al AND 0Fh > 9) or (the Auxilliary Flag is set)
+   al = al-6
+   CF = CF or CF_old
+   AF set
+ENDIF
+IF (al > 99h) or (Carry Flag is set)
+   al = al - 60h
+   CF set
+ENDIF
+ */
+void VM86::DAS()
+{
+	printf("DAS\n");
+#if 1
+	if (set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF])) {
+		op_result = regs8[REG_AL] -= 6;
+		set_CF(regs8[FLAG_CF] || (regs8[REG_AL] >= scratch2_uint));
+	}
+//	set_CF(((scratch2_uint & 0xFF) > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] -= 0x60);
+	set_CF((regs8[REG_AL] > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] -= 0x60);
+#else
+#endif
+}
+
 /*
 void VM86::audio_callback(void *data, unsigned char *stream, int len)
 {
@@ -173,6 +337,7 @@ void VM86::audio_callback(void *data, unsigned char *stream, int len)
 	spkr_en = io_ports[0x61] & 3;
 }
 */
+
 void VM86::Step()
 {
 	if (pause) return;
@@ -209,7 +374,7 @@ void VM86::Step()
 		else // If i_mod is 1, operand is (usually) 8 bits rather than 16 bits
 			i_data1 = (char)i_data1;
 
-		DECODE_RM_REG;
+		DecodeRM_REG();
 	}
 
 	// Execute
@@ -217,14 +382,14 @@ void VM86::Step()
 
 	// Increment instruction pointer by computed instruction length. Tables in the BIOS binary
 	// help us here.
-	reg_ip += (i_mod*(i_mod != 3) + 2*(!i_mod && i_rm == 6))*i_mod_size + bios_table_lookup[TABLE_BASE_INST_SIZE][raw_opcode_id] + bios_table_lookup[TABLE_I_W_SIZE][raw_opcode_id]*(i_w + 1);
+	reg_ip += (i_mod*(i_mod != 3) + 2*(!i_mod && i_rm == 6))*i_mod_size + lookup_table[TABLE_BASE_INST_SIZE][raw_opcode_id] + lookup_table[TABLE_I_W_SIZE][raw_opcode_id]*(i_w + 1);
 
 	// If instruction needs to update SF, ZF and PF, set them as appropriate
 	if (set_flags_type & FLAGS_UPDATE_SZP)
 	{
 		regs8[FLAG_SF] = SIGN_OF(op_result);
 		regs8[FLAG_ZF] = !op_result;
-		regs8[FLAG_PF] = bios_table_lookup[TABLE_PARITY_FLAG][(unsigned char)op_result];
+		regs8[FLAG_PF] = lookup_table[TABLE_PARITY_FLAG][(unsigned char)op_result];
 
 		// If instruction is an arithmetic or logic operation, also set AF/OF/CF as appropriate.
 		if (set_flags_type & FLAGS_UPDATE_AO_ARITH)

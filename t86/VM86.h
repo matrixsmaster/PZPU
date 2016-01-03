@@ -37,7 +37,7 @@ protected:
 	unsigned char rep_mode;
 	unsigned char seg_override_en, rep_override_en;
 	unsigned char trap_flag, int8_asap, scratch_uchar, io_hi_lo, *vid_mem_base, spkr_en;
-	unsigned char bios_table_lookup[20][256];
+//	unsigned char bios_table_lookup[20][256];
 	unsigned short reg_ip, seg_override;
 	unsigned short file_index, wave_counter;
 	unsigned int op_source, op_dest, rm_addr, op_to_addr, op_from_addr;
@@ -61,6 +61,13 @@ protected:
 	void set_opcode(unsigned char opcode);
 	char pc_interrupt(unsigned char interrupt_num);
 	int AAA_AAS(char which_operation);
+	void DecodeRM_REG();
+	void MUL();
+	void IMUL();
+	void DIV();
+	void IDIV();
+	void DAA();
+	void DAS();
 	void audio_callback(void *data, unsigned char *stream, int len);
 	void IEU();
 	void LocalOpcode();
@@ -82,11 +89,6 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 
 // Helper macros
 
-// Decode mod, r_m and reg fields in instruction
-#define DECODE_RM_REG scratch2_uint = 4 * !i_mod, \
-					  op_to_addr = rm_addr = i_mod < 3 ? SEGREG(seg_override_en ? seg_override : bios_table_lookup[scratch2_uint + 3][i_rm], bios_table_lookup[scratch2_uint][i_rm], regs16[bios_table_lookup[scratch2_uint + 1][i_rm]] + bios_table_lookup[scratch2_uint + 2][i_rm] * i_data1+) : GET_REG_ADDR(i_rm), \
-					  op_from_addr = GET_REG_ADDR(i_reg), \
-					  i_d && (scratch_uint = op_from_addr, op_from_addr = rm_addr, op_to_addr = scratch_uint)
 
 // Return memory-mapped register location (offset into mem array) for register #reg_id
 #define GET_REG_ADDR(reg_id) (REGS_BASE + (i_w ? 2 * reg_id : 2 * reg_id + reg_id / 4 & 7))
@@ -99,13 +101,15 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 #define OPCODE_CHAIN ; /* no break */ case
 
 // [I]MUL/[I]DIV/DAA/DAS/ADC/SBB helpers
-#define MUL_MACRO(op_data_type,out_regs) (set_opcode(0x10), \
-										  out_regs[i_w + 1] = (op_result = CAST(op_data_type)mem[rm_addr] * (op_data_type)*out_regs) >> 16, \
-										  regs16[REG_AX] = op_result, \
-										  set_OF(set_CF(op_result - (op_data_type)op_result)))
-#define DIV_MACRO(out_data_type,in_data_type,out_regs) (scratch_int = CAST(out_data_type)mem[rm_addr]) && !(scratch2_uint = (in_data_type)(scratch_uint = (out_regs[i_w+1] << 16) + regs16[REG_AX]) / scratch_int, scratch2_uint - (out_data_type)scratch2_uint) ? out_regs[i_w+1] = scratch_uint - scratch_int * (*out_regs = scratch2_uint) : pc_interrupt(0)
-#define DAA_DAS(op1,op2,mask,min) set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF]) && (op_result = regs8[REG_AL] op1 6, set_CF(regs8[FLAG_CF] || (regs8[REG_AL] op2 scratch2_uint))), \
-								  set_CF((((mask & 1 ? scratch2_uint : regs8[REG_AL]) & mask) > min) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] op1 0x60)
+//#define MUL_MACRO(op_data_type,out_regs) (set_opcode(0x10), \
+//										  out_regs[i_w + 1] = (op_result = CAST(op_data_type)mem[rm_addr] * (op_data_type)*out_regs) >> 16, \
+//										  regs16[REG_AX] = op_result, \
+//										  set_OF(set_CF(op_result - (op_data_type)op_result)))
+
+//#define DIV_MACRO(out_data_type,in_data_type,out_regs) (scratch_int = CAST(out_data_type)mem[rm_addr]) && !(scratch2_uint = (in_data_type)(scratch_uint = (out_regs[i_w+1] << 16) + regs16[REG_AX]) / scratch_int, scratch2_uint - (out_data_type)scratch2_uint) ? out_regs[i_w+1] = scratch_uint - scratch_int * (*out_regs = scratch2_uint) : pc_interrupt(0)
+//#define DAA_DAS(op1,op2,mask,min) set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF]) && (op_result = regs8[REG_AL] op1 6, set_CF(regs8[FLAG_CF] || (regs8[REG_AL] op2 scratch2_uint))), \
+//								  set_CF((((mask & 1 ? scratch2_uint : regs8[REG_AL]) & mask) > min) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] op1 0x60)
+
 #define ADC_SBB_MACRO(a) OP(a##= regs8[FLAG_CF] +), \
 						 set_CF(regs8[FLAG_CF] && (op_result == op_dest) || (a op_result < a(int)op_dest)), \
 						 set_AF_OF_arith()
@@ -113,6 +117,7 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 // Execute arithmetic/logic operations in emulator memory/registers
 #define R_M_OP(dest,op,src) (i_w ? op_dest = CAST(unsigned short)dest, op_result = CAST(unsigned short)dest op (op_source = CAST(unsigned short)src) \
 								 : (op_dest = dest, op_result = dest op (op_source = CAST(unsigned char)src)))
+
 #define MEM_OP(dest,op,src) R_M_OP(mem[dest],op,mem[src])
 #define OP(op) MEM_OP(op_to_addr,op,op_from_addr)
 
