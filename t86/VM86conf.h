@@ -12,8 +12,10 @@
 
 //#define FILENAME_LENGTH 128
 //#define MRAM_TEST 1
-#define USE_RAW_OUTPUT 1
+//#define USE_RAW_OUTPUT 1
 #define USRIO 1
+
+#define TIMESTEP 5
 
 // Emulator system constants
 #define IO_PORT_COUNT	0x10000

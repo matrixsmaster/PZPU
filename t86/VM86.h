@@ -10,10 +10,11 @@
 #ifndef VM86_H_
 #define VM86_H_
 
-//#include <time.h>
-//#include <sys/timeb.h>
-//#include <memory.h>
 #include "VM86conf.h"
+
+#ifndef USRIO
+#include <memory.h>
+#endif
 
 #ifdef MRAM_TEST
 #include "MRAM.h"
@@ -46,9 +47,7 @@ protected:
 	unsigned int GRAPHICS_X, GRAPHICS_Y, pixel_colors[16], vmem_ctr;
 	int op_result, disk[NUMVDISKS], scratch_int;
 //	time_t clock_buf;
-#ifndef USRIO
-	struct timeb ms_clock;
-#endif
+//	struct timeb ms_clock;
 	unsigned short vid_addr_lookup[VIDEO_RAM_SIZE], cga_colors[4];
 	int pause;
 

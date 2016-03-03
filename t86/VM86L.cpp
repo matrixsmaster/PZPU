@@ -8,6 +8,8 @@
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
 #include "VM86.h"
+#include <time.h>
+#include <sys/timeb.h>
 
 #ifndef USE_RAW_OUTPUT
 #include <stdio.h>
@@ -18,9 +20,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #else
-typedef unsigned long long size_t;
+//typedef unsigned long long size_t;
 /*Include floppy disk image data*/
 #include "floppyimg.h"
+#endif
+
+#ifdef USRIO
+static time_t seconds = 1234789;
+static unsigned short millis = 0;
+static size_t diskhead = 0;
 #endif
 
 #ifdef MRAM_TEST
@@ -57,13 +65,15 @@ ssize_t my_write(int id, RAMptr<uch>* p, size_t n)
 #ifdef USRIO
 size_t sta_read(int id, void* buf, size_t n)
 {
-	//TODO
+	if (diskhead + n >= fd_img_len) return 0;
+	memcpy(buf,fd_img+diskhead,n);
 	return n;
 }
 
 size_t sta_write(int id, const void* buf, size_t n)
 {
-	//TODO
+	if (diskhead + n >= fd_img_len) return 0;
+	memcpy(fd_img+diskhead,buf,n);
 	return n;
 }
 
@@ -86,6 +96,11 @@ void VM86::LocalOpcode()
 	unsigned char* tmp = mem + SEGREG(REG_ES, REG_BX,);
 #endif
 
+#ifndef USRIO
+	time_t clock_buf;
+	struct timeb ms_clock;
+#endif
+
 	switch ((char)i_data0)
 	{
 		OPCODE_CHAIN 0: // PUTCHAR_AL
@@ -95,11 +110,11 @@ void VM86::LocalOpcode()
 			else
 				printf("byte out: %hhu\n",*regs8);
 #else
-#ifdef USRIO
-			//TODO
-#else
+//#ifdef USRIO
+//			//TODO
+//#else
 			write(1, regs8, 1);
-#endif /*USRIO*/
+//#endif /*USRIO*/
 #endif /* ! USE_RAW_OUTPUT */
 
 		OPCODE 1: // GET_RTC
@@ -113,8 +128,13 @@ void VM86::LocalOpcode()
 #endif /*MRAM_TEST*/
 			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = ms_clock.millitm;
 #else
-			;
-			//TODO
+			if (++millis >= 1000) {
+				millis = 0;
+				seconds++;
+			} else
+				millis += TIMESTEP;
+			memcpy(tmp, localtime(&seconds), sizeof(seconds));
+			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = millis;
 #endif /* ! USRIO */
 
 		OPCODE 2: // DISK_READ
@@ -127,8 +147,11 @@ void VM86::LocalOpcode()
 #endif /*MRAM_TEST*/
 				: 0;
 #else
-			;
-			//TODO
+			if ((disk[regs8[REG_DL]]) && ((CAST(unsigned)regs16[REG_BP] << 9) < fd_img_len)) {
+				diskhead = (CAST(unsigned)regs16[REG_BP] << 9);
+				regs8[REG_AL] = sta_read(disk[regs8[REG_DL]], &tmp, regs16[REG_AX]);
+			} else
+				regs8[REG_AL] = 0;
 #endif /* ! USRIO*/
 
 		OPCODE 3: // DISK_WRITE
@@ -141,8 +164,11 @@ void VM86::LocalOpcode()
 #endif /*MRAM_TEST*/
 				: 0;
 #else
-			;
-			//TODO
+			if ((disk[regs8[REG_DL]]) && ((CAST(unsigned)regs16[REG_BP] << 9) < fd_img_len)) {
+				diskhead = (CAST(unsigned)regs16[REG_BP] << 9);
+				regs8[REG_AL] = sta_write(disk[regs8[REG_DL]], &tmp, regs16[REG_AX]);
+			} else
+				regs8[REG_AL] = 0;
 #endif /* ! USRIO */
 	}
 }
