@@ -14,6 +14,9 @@
 
 #ifndef USRIO
 #include <memory.h>
+#ifdef USE_RAW_OUTPUT
+#include <unistd.h>
+#endif
 #endif
 
 #ifdef MRAM_TEST

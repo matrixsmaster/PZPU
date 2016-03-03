@@ -12,8 +12,8 @@
 
 //#define FILENAME_LENGTH 128
 //#define MRAM_TEST 1
-//#define USE_RAW_OUTPUT 1
-#define USRIO 1
+#define USE_RAW_OUTPUT 1
+//#define USRIO 1
 
 #define TIMESTEP 5
 
