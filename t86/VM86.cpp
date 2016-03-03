@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include "VM86.h"
 #include "VM86bios.h"
-#include <stdlib.h> //FIXME: abort()
+//#include <stdlib.h> //FIXME: abort()
 
 VM86::VM86()
 {
@@ -66,7 +66,7 @@ void VM86::Reset()
 
 	// Open floppy disk image (disk[1]), and hard disk image (disk[0]) if specified
 	disk[1] = open("fd.raw", 32898);
-	if (disk[1] < 0) abort(); //FIXME
+//	if (disk[1] < 0) abort(); //FIXME
 	disk[0] = 0;
 
 	// Set CX:AX equal to the hard disk image size, if present
@@ -174,7 +174,7 @@ void VM86::DecodeRM_REG()
 		op_to_addr = scratch_uint;
 	}
 }
-#include <stdio.h>
+//#include <stdio.h>
 // [I]MUL/[I]DIV/DAA/DAS/ADC/SBB helpers
 void VM86::MUL()
 {
@@ -278,16 +278,12 @@ ENDIF
  */
 void VM86::DAA()
 {
-	printf("DAA\n");
-#if 1
+//	printf("DAA\n");
 	if (set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF])) {
 		op_result = regs8[REG_AL] += 6;
 		set_CF(regs8[FLAG_CF] || (regs8[REG_AL] < scratch2_uint));
 	}
-//	set_CF(((regs8[REG_AL] & 0xF0) > 0x90) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] += 0x60);
 	set_CF((regs8[REG_AL] > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] += 0x60);
-#else
-#endif
 }
 
 /*
@@ -316,16 +312,12 @@ ENDIF
  */
 void VM86::DAS()
 {
-	printf("DAS\n");
-#if 1
+//	printf("DAS\n");
 	if (set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF])) {
 		op_result = regs8[REG_AL] -= 6;
 		set_CF(regs8[FLAG_CF] || (regs8[REG_AL] >= scratch2_uint));
 	}
-//	set_CF(((scratch2_uint & 0xFF) > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] -= 0x60);
 	set_CF((regs8[REG_AL] > 0x99) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] -= 0x60);
-#else
-#endif
 }
 
 /*

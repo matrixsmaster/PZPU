@@ -40,9 +40,9 @@ void VM86::IEU()
 				set_OF(op_dest + 1 - i_reg == 1 << (TOP_BIT - 1)),
 				(xlat_opcode_id == 5) && (set_opcode(0x10), 0); // Decode like ADC
 			else if (i_reg != 6) // JMP|CALL
-				i_reg - 3 || R_M_PUSH(regs16[REG_CS]), // CALL (far)
-				i_reg & 2 && R_M_PUSH(reg_ip + 2 + i_mod*(i_mod != 3) + 2*(!i_mod && i_rm == 6)), // CALL (near or far)
-				i_reg & 1 && (regs16[REG_CS] = CAST(short)mem[op_from_addr + 2]), // JMP|CALL (far)
+				(i_reg - 3) || R_M_PUSH(regs16[REG_CS]), // CALL (far)
+				(i_reg & 2) && R_M_PUSH(reg_ip + 2 + i_mod*(i_mod != 3) + 2*(!i_mod && i_rm == 6)), // CALL (near or far)
+				(i_reg & 1) && (regs16[REG_CS] = CAST(short)mem[op_from_addr + 2]), // JMP|CALL (far)
 				R_M_OP(reg_ip, =, mem[op_from_addr]),
 				set_opcode(0x9A); // Decode like CALL
 			else // PUSH

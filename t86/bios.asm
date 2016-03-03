@@ -90,25 +90,6 @@ bios_entry:
 
 	; Now we can do whatever we want! DL starts off being the boot disk.
 
-;test
-	xor ax, ax
-	mov al, 0ffh
-	extended_putchar_al
-	das
-	extended_putchar_al
-	mov al, 038h
-	sub al, 074h
-	extended_putchar_al
-	das
-	extended_putchar_al
-	mov al, 038h
-	add al, 045h
-	extended_putchar_al
-	daa
-	extended_putchar_al
-	;mov al, 015h
-	;extended_putchar_al
-
 	mov	[cs:boot_device], dl
 
 	; Set up Hercules graphics support. We start with the adapter in text mode
