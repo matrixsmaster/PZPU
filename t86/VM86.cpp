@@ -9,6 +9,7 @@
 
 #include "VM86.h"
 #include "VM86bios.h"
+#include <unistd.h>
 
 VM86::VM86()
 {

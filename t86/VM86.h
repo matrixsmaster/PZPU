@@ -137,7 +137,7 @@ void memcpy(void* dst, const void* src, unsigned len);
 #if USE_RAW_OUTPUT && (!USRIO)
 #define KEYBOARD_DRIVER read(0, &(mem[0x4A6]), 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7))
 #elif USE_RAW_OUTPUT
-#define KEYBOARD_DRIVER 1 /*FIXME*/
+#define KEYBOARD_DRIVER read(0, &(mem[0x4A6]), 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7)) /*FIXME*/
 #else
 #define KEYBOARD_DRIVER 1 /*nothing to do, keyboard disabled because terminal is in blocking mode*/
 #endif

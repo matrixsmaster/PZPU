@@ -16,8 +16,8 @@
 #include <ctype.h>
 #endif
 
-#ifndef USRIO
 #include <unistd.h>
+#ifndef USRIO
 #include <fcntl.h>
 #else
 //typedef unsigned long long size_t;
@@ -25,11 +25,11 @@
 #include "floppyimg.h"
 #endif
 
-//#ifdef USRIO
+#ifdef USRIO
 static time_t seconds = 1234789;
 static unsigned short millis = 0;
 static size_t diskhead = 0;
-//#endif
+#endif
 
 #ifdef MRAM_TEST
 void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len)
@@ -118,6 +118,16 @@ void VM86::LocalOpcode()
 #endif /* ! USE_RAW_OUTPUT */
 
 		OPCODE 1: // GET_RTC
+#ifndef USRIO
+			time(&clock_buf);
+			ftime(&ms_clock);
+#ifdef MRAM_TEST
+			my_memcpy(&tmp, localtime(&clock_buf), sizeof(struct tm));
+#else
+			memcpy(tmp, localtime(&clock_buf), sizeof(struct tm));
+#endif /*MRAM_TEST*/
+			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = ms_clock.millitm;
+#else
 			if (++millis >= 1000) {
 				millis = 0;
 				seconds++;
@@ -125,6 +135,7 @@ void VM86::LocalOpcode()
 				millis += TIMESTEP;
 			memcpy(tmp, localtime(&seconds), sizeof(seconds));
 			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = millis;
+#endif /* ! USRIO */
 
 		OPCODE 2: // DISK_READ
 #ifndef USRIO
@@ -138,7 +149,7 @@ void VM86::LocalOpcode()
 #else
 			if ((disk[regs8[REG_DL]]) && ((CAST(unsigned)regs16[REG_BP] << 9) < fd_img_len)) {
 				diskhead = (CAST(unsigned)regs16[REG_BP] << 9);
-				regs8[REG_AL] = sta_read(disk[regs8[REG_DL]], &tmp, regs16[REG_AX]);
+				regs8[REG_AL] = sta_read(disk[regs8[REG_DL]], tmp, regs16[REG_AX]);
 			} else
 				regs8[REG_AL] = 0;
 #endif /* ! USRIO*/
@@ -155,7 +166,7 @@ void VM86::LocalOpcode()
 #else
 			if ((disk[regs8[REG_DL]]) && ((CAST(unsigned)regs16[REG_BP] << 9) < fd_img_len)) {
 				diskhead = (CAST(unsigned)regs16[REG_BP] << 9);
-				regs8[REG_AL] = sta_write(disk[regs8[REG_DL]], &tmp, regs16[REG_AX]);
+				regs8[REG_AL] = sta_write(disk[regs8[REG_DL]], tmp, regs16[REG_AX]);
 			} else
 				regs8[REG_AL] = 0;
 #endif /* ! USRIO */
