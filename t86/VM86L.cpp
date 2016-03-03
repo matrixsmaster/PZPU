@@ -7,13 +7,20 @@
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
-#include <unistd.h>
-#include <fcntl.h>
 #include "VM86.h"
 
 #ifndef USE_RAW_OUTPUT
 #include <stdio.h>
 #include <ctype.h>
+#endif
+
+#ifndef USRIO
+#include <unistd.h>
+#include <fcntl.h>
+#else
+typedef unsigned long long size_t;
+/*Include floppy disk image data*/
+#include "floppyimg.h"
 #endif
 
 #ifdef MRAM_TEST
@@ -41,11 +48,35 @@ ssize_t my_write(int id, RAMptr<uch>* p, size_t n)
 {
 	unsigned i;
 	for (i = 0; i < n; ) {
-		if (read(id,&((*p)[i++]),1) != 1) break;
+		if (write(id,&((*p)[i++]),1) != 1) break;
 	}
 	return i;
 }
-#endif
+#endif /*MRAM_TEST*/
+
+#ifdef USRIO
+size_t sta_read(int id, void* buf, size_t n)
+{
+	//TODO
+	return n;
+}
+
+size_t sta_write(int id, const void* buf, size_t n)
+{
+	//TODO
+	return n;
+}
+
+void memcpy(void* dst, const void* src, unsigned len)
+{
+	char* to = (char*)dst;
+	const char* from = (const char*)src;
+	while (len > 0) {
+		--len;
+		to[len] = from[len];
+	}
+}
+#endif /*USRIO*/
 
 void VM86::LocalOpcode()
 {
@@ -64,35 +95,87 @@ void VM86::LocalOpcode()
 			else
 				printf("byte out: %hhu\n",*regs8);
 #else
+#ifdef USRIO
+			//TODO
+#else
 			write(1, regs8, 1);
-#endif
+#endif /*USRIO*/
+#endif /* ! USE_RAW_OUTPUT */
 
 		OPCODE 1: // GET_RTC
+#ifndef USRIO
 			time(&clock_buf);
 			ftime(&ms_clock);
 #ifdef MRAM_TEST
 			my_memcpy(&tmp, localtime(&clock_buf), sizeof(struct tm));
 #else
 			memcpy(tmp, localtime(&clock_buf), sizeof(struct tm));
-#endif
+#endif /*MRAM_TEST*/
 			CAST(short)mem[SEGREG(REG_ES, REG_BX, 36+)] = ms_clock.millitm;
+#else
+			;
+			//TODO
+#endif /* ! USRIO */
 
 		OPCODE 2: // DISK_READ
+#ifndef USRIO
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
 #ifdef MRAM_TEST
 				? (int)my_read(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
 #else
 				? (int)read(disk[regs8[REG_DL]], tmp, regs16[REG_AX])
-#endif
+#endif /*MRAM_TEST*/
 				: 0;
+#else
+			;
+			//TODO
+#endif /* ! USRIO*/
 
 		OPCODE 3: // DISK_WRITE
+#ifndef USRIO
 			regs8[REG_AL] = ~lseek(disk[regs8[REG_DL]], CAST(unsigned)regs16[REG_BP] << 9, 0)
-#ifdef MRAM_TEST
+#if MRAM_TEST
 				? (int)my_write(disk[regs8[REG_DL]], &tmp, regs16[REG_AX])
 #else
 				? (int)write(disk[regs8[REG_DL]], tmp, regs16[REG_AX])
-#endif
+#endif /*MRAM_TEST*/
 				: 0;
+#else
+			;
+			//TODO
+#endif /* ! USRIO */
 	}
+}
+
+void VM86::OpenDD()
+{
+#ifndef USRIO
+	// Open floppy disk image (disk[1]), and hard disk image (disk[0]) if specified
+	disk[1] = open("fd.raw", 32898);
+	disk[0] = 0;
+
+	// Set CX:AX equal to the hard disk image size, if present
+#ifndef MRAM_TEST
+	CAST(unsigned)regs16[REG_AX] = *disk ? lseek(*disk, 0, 2) >> 9 : 0;
+#else
+	regs16[REG_AX] = 0; //no hdd
+#endif
+
+#else
+
+	//We'll use static data array in memory
+	disk[1] = 1;
+	disk[0] = 0;
+	regs16[REG_AX] = 0; //no hdd
+#endif /*USRIO*/
+}
+
+void VM86::CloseDD()
+{
+#ifndef USRIO
+	for (int i = 0; i < NUMVDISKS; i++) {
+		if (disk[i]) close(disk[i]);
+		disk[i] = 0;
+	}
+#endif
 }

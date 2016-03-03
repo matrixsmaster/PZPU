@@ -10,9 +10,9 @@
 #ifndef VM86_H_
 #define VM86_H_
 
-#include <time.h>
-#include <sys/timeb.h>
-#include <memory.h>
+//#include <time.h>
+//#include <sys/timeb.h>
+//#include <memory.h>
 #include "VM86conf.h"
 
 #ifdef MRAM_TEST
@@ -37,7 +37,6 @@ protected:
 	unsigned char rep_mode;
 	unsigned char seg_override_en, rep_override_en;
 	unsigned char trap_flag, int8_asap, scratch_uchar, io_hi_lo, *vid_mem_base, spkr_en;
-//	unsigned char bios_table_lookup[20][256];
 	unsigned short reg_ip, seg_override;
 	unsigned short file_index, wave_counter;
 	unsigned int op_source, op_dest, rm_addr, op_to_addr, op_from_addr;
@@ -46,11 +45,14 @@ protected:
 	unsigned int inst_counter, set_flags_type;
 	unsigned int GRAPHICS_X, GRAPHICS_Y, pixel_colors[16], vmem_ctr;
 	int op_result, disk[NUMVDISKS], scratch_int;
-	time_t clock_buf;
+//	time_t clock_buf;
+#ifndef USRIO
 	struct timeb ms_clock;
+#endif
 	unsigned short vid_addr_lookup[VIDEO_RAM_SIZE], cga_colors[4];
 	int pause;
 
+	void OpenDD();
 	void CloseDD();
 	char set_CF(int new_CF);
 	char set_AF(int new_AF);
@@ -83,12 +85,13 @@ public:
 	int GetState()		const	{ return pause; }
 };
 
-#ifdef MRAM_TEST
+#if MRAM_TEST
 void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
+#elif USRIO
+void memcpy(void* dst, const void* src, unsigned len);
 #endif
 
 // Helper macros
-
 
 // Return memory-mapped register location (offset into mem array) for register #reg_id
 #define GET_REG_ADDR(reg_id) (REGS_BASE + (i_w ? 2 * reg_id : 2 * reg_id + reg_id / 4 & 7))
@@ -99,16 +102,6 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 // Opcode execution unit helpers
 #define OPCODE ;break; case
 #define OPCODE_CHAIN ; /* no break */ case
-
-// [I]MUL/[I]DIV/DAA/DAS/ADC/SBB helpers
-//#define MUL_MACRO(op_data_type,out_regs) (set_opcode(0x10), \
-//										  out_regs[i_w + 1] = (op_result = CAST(op_data_type)mem[rm_addr] * (op_data_type)*out_regs) >> 16, \
-//										  regs16[REG_AX] = op_result, \
-//										  set_OF(set_CF(op_result - (op_data_type)op_result)))
-
-//#define DIV_MACRO(out_data_type,in_data_type,out_regs) (scratch_int = CAST(out_data_type)mem[rm_addr]) && !(scratch2_uint = (in_data_type)(scratch_uint = (out_regs[i_w+1] << 16) + regs16[REG_AX]) / scratch_int, scratch2_uint - (out_data_type)scratch2_uint) ? out_regs[i_w+1] = scratch_uint - scratch_int * (*out_regs = scratch2_uint) : pc_interrupt(0)
-//#define DAA_DAS(op1,op2,mask,min) set_AF((((scratch2_uint = regs8[REG_AL]) & 0x0F) > 9) || regs8[FLAG_AF]) && (op_result = regs8[REG_AL] op1 6, set_CF(regs8[FLAG_CF] || (regs8[REG_AL] op2 scratch2_uint))), \
-//								  set_CF((((mask & 1 ? scratch2_uint : regs8[REG_AL]) & mask) > min) || regs8[FLAG_CF]) && (op_result = regs8[REG_AL] op1 0x60)
 
 #define ADC_SBB_MACRO(a) OP(a##= regs8[FLAG_CF] +), \
 						 set_CF(regs8[FLAG_CF] && (op_result == op_dest) || (a op_result < a(int)op_dest)), \
@@ -139,8 +132,10 @@ void my_memcpy(RAMptr<uch>* p, const void* src, unsigned len);
 //#define CAST(a) (a)
 
 // Keyboard driver for console. This may need changing for UNIX/non-UNIX platforms
-#ifdef USE_RAW_OUTPUT
+#if USE_RAW_OUTPUT && (!USRIO)
 #define KEYBOARD_DRIVER read(0, &(mem[0x4A6]), 1) && (int8_asap = (mem[0x4A6] == 0x1B), pc_interrupt(7))
+#elif USE_RAW_OUTPUT
+#define KEYBOARD_DRIVER 1 /*FIXME*/
 #else
 #define KEYBOARD_DRIVER 1 /*nothing to do, keyboard disabled because terminal is in blocking mode*/
 #endif

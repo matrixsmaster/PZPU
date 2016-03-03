@@ -7,16 +7,14 @@
 //
 // This work is licensed under the MIT License. See included LICENSE.TXT.
 
-#include <unistd.h>
-#include <fcntl.h>
 #include "VM86.h"
 #include "VM86bios.h"
-//#include <stdlib.h> //FIXME: abort()
 
 VM86::VM86()
 {
 	memcpy(cga_colors,cga_colors_table,sizeof(cga_colors));
-	memset(disk,0,sizeof(disk));
+//	memset(disk,0,sizeof(disk));
+	for (int i = 0; i < NUMVDISKS; i++) disk[i] = 0;
 	pause = 0;
 
 #ifdef MRAM_TEST
@@ -30,14 +28,6 @@ VM86::VM86()
 VM86::~VM86()
 {
 	CloseDD();
-}
-
-void VM86::CloseDD()
-{
-	for (int i = 0; i < NUMVDISKS; i++) {
-		if (disk[i]) close(disk[i]);
-		disk[i] = 0;
-	}
 }
 
 void VM86::Reset()
@@ -64,17 +54,7 @@ void VM86::Reset()
 	// But, if the HD image file is prefixed with @, then boot from the HD
 	regs8[REG_DL] = 0;
 
-	// Open floppy disk image (disk[1]), and hard disk image (disk[0]) if specified
-	disk[1] = open("fd.raw", 32898);
-//	if (disk[1] < 0) abort(); //FIXME
-	disk[0] = 0;
-
-	// Set CX:AX equal to the hard disk image size, if present
-#ifndef MRAM_TEST
-	CAST(unsigned)regs16[REG_AX] = *disk ? lseek(*disk, 0, 2) >> 9 : 0;
-#else
-	regs16[REG_AX] = 0; //no hdd
-#endif
+	OpenDD();
 
 	// Load BIOS image into F000:0100, and set IP to 0100
 	reg_ip = 0x100;
