@@ -1,7 +1,8 @@
 #include "pzpu.h"
 #include "ram.h"
+#include "io.h"
 
-static uint8_t idim,halt = 1;
+static uint8_t idim,dtpc,halt = 1;
 static uint32_t sp,pc,ram;
 
 #ifdef PZPU_DBG
@@ -17,13 +18,13 @@ void msg(const char* fmt, ...)
 	va_end(vl);
 }
 
-void trace(uint8_t code, uint8_t ilong)
+void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
 	if (code > 0x0f) {
 		if (!ilong) return;
-		msg("PC: 0x%08X  SP: 0x%08X  I: 0x%02X L[" MNEMOUTP "]\n",pc,sp,code,mnemonics[ilong]);
+		msg("PC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
 	} else {
-		msg("PC: 0x%08X  SP: 0x%08X  I: 0x%02X S[" MNEMOUTP "]\n",pc,sp,code,mnemonics[code]);
+		msg("PC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
 
@@ -33,9 +34,26 @@ void reset(uint32_t ramsize)
 {
 	halt = 0;
 	idim = 0;
-	pc = 0;
-	sp = ramsize - PZPU_STACKSZ;
+	dtpc = 0;
+	pc = 0x0;
+	sp = ramsize - 1;// - PZPU_STACKSZ;
 	ram = ramsize;
+}
+
+static uint32_t inline mem_rd_dw(uint32_t adr)
+{
+	if (adr >= PZPU_IOSPACE)
+		return io_rd(adr);
+	else
+		return ram_rd_dw(adr);
+}
+
+static void inline mem_wr_dw(uint32_t adr, uint32_t val)
+{
+	if (adr >= PZPU_IOSPACE)
+		io_wr(adr,val);
+	else
+		ram_wr_dw(adr,val);
 }
 
 static zpuint inline pop(void)
@@ -86,8 +104,11 @@ static void inline im(uint8_t x)
 			v = 0xffffff10;
 		}
 		push(v | x);
-		idim = 1;
 	}
+#ifdef PZPU_DBG
+	msg("IM: IDIM = %i X = 0x%02X  Result = 0x%08X\n",idim,x,(v|x));
+#endif
+	idim = 1;
 }
 
 static uint32_t inline sp_off(uint8_t w)
@@ -100,15 +121,15 @@ static uint32_t inline sp_off(uint8_t w)
 
 static void inline iemu(uint8_t x)
 {
-//	push(pc+1);
 	push(pc);
 	pc = (uint32_t)x * 32;
+	dtpc = 1;
 }
 
 static void exec(uint8_t x)
 {
 #ifdef PZPU_DBG
-	trace(x,0);
+	trace(x,0,0);
 #endif
 
 	switch (x) {
@@ -163,34 +184,33 @@ static void exec(uint8_t x)
 
 		if (x >= ZPU_IM) {
 #ifdef PZPU_DBG
-			trace(x,16);
+			trace(x,16,x & 0x7f);
 #endif
 			im(x & 0x7f);
-//			pc++;
 			return; //don't reset IDIM flag
 
 		} else if (x >= ZPU_LOADSP) {
 #ifdef PZPU_DBG
-			trace(x,18);
+			trace(x,18,(x & 0x1f) ^ 0x10);
 #endif
-			push(mem_rd_dw(sp_off(x & 0x1f)));
+			push(mem_rd_dw(sp_off((x & 0x1f) ^ 0x10)));
 
 		} else if (x >= ZPU_STORESP) {
 #ifdef PZPU_DBG
-			trace(x,17);
+			trace(x,17,(x & 0x1f) ^ 0x10);
 #endif
-			zpuint a = sp_off(x & 0x1f);
+			zpuint a = sp_off((x & 0x1f) ^ 0x10);
 			mem_wr_dw(a,pop());
 
 		} else if (x >= ZPU_EMULATE) {
 #ifdef PZPU_DBG
-			trace(x,20);
+			trace(x,20,x & 0x1f);
 #endif
 			iemu(x & 0x1f);
 
 		} else if (x >= ZPU_ADDSP) {
 #ifdef PZPU_DBG
-			trace(x,19);
+			trace(x,19,x & 0x0f);
 #endif
 			zpuint a = sp_off(x & 0x0f);
 			push((zpuint)mem_rd_dw(a) + pop());
@@ -206,14 +226,14 @@ static void exec(uint8_t x)
 	}
 
 	idim = 0;
-//	pc++;
 }
 
 void step(void)
 {
 	if (halt) return;
 	exec(mem_rd_b(pc));
-	pc++;
+	if (!dtpc) pc++;
+	dtpc = 0;
 }
 
 uint8_t status()

@@ -5,11 +5,13 @@
 #include <inttypes.h>
 
 #define PZPU_DBG 1
+#define mem_rd_b ram_rd_b
+#define mem_wr_b ram_wr_b
 
 typedef uint32_t zpuint;
 
-#define PZPU_STACKSZ 0x10000
-#define PZPU_IOSPACE 0x80000000
+//#define PZPU_STACKSZ 0x10000U
+#define PZPU_IOSPACE 0x08000000U
 
 enum ZpuOpcode {
 	ZPU_BREAK = 0,

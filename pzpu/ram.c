@@ -37,7 +37,7 @@ int ram_load(const char* fn, uint32_t maxsz)
 		fclose(f);
 		return 1;
 	}
-	sz--;
+//	sz--;
 	fseek(f,0,SEEK_SET);
 
 	if (fread(RAM,sz,1,f) < 1) {
@@ -51,9 +51,9 @@ int ram_load(const char* fn, uint32_t maxsz)
 	return 0;
 }
 
-void mem_wr_dw(uint32_t adr, uint32_t val)
+void ram_wr_dw(uint32_t adr, uint32_t val)
 {
-	if (adr >= ramsize) {
+	if (adr >= ramsize-3) {
 		fprintf(stderr,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
 		return;
 	}
@@ -63,11 +63,11 @@ void mem_wr_dw(uint32_t adr, uint32_t val)
 	RAM[adr]   = (val >>  8);
 }
 
-uint32_t mem_rd_dw(uint32_t adr)
+uint32_t ram_rd_dw(uint32_t adr)
 {
 	uint32_t r = 0;
-	if (adr >= ramsize) {
-		fprintf(stderr,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr-3);
+	if (adr >= ramsize-3) {
+		fprintf(stderr,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
 		return r;
 	}
 	adr += 3;
@@ -78,7 +78,7 @@ uint32_t mem_rd_dw(uint32_t adr)
 	return r;
 }
 
-void mem_wr_b(uint32_t adr, uint8_t val)
+void ram_wr_b(uint32_t adr, uint8_t val)
 {
 	if (adr >= ramsize) {
 		fprintf(stderr,"Reached out of memory [WR B] (adr = 0x%08X)\n",adr);
@@ -87,7 +87,7 @@ void mem_wr_b(uint32_t adr, uint8_t val)
 	RAM[adr] = val;
 }
 
-uint8_t mem_rd_b(uint32_t adr)
+uint8_t ram_rd_b(uint32_t adr)
 {
 	if (adr >= ramsize) {
 		fprintf(stderr,"Reached out of memory [RD B] (adr = 0x%08X)\n",adr);
