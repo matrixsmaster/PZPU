@@ -121,7 +121,7 @@ static uint32_t inline sp_off(uint8_t w)
 
 static void inline iemu(uint8_t x)
 {
-	push(pc);
+	push(pc+1);
 	pc = (uint32_t)x * 32;
 	dtpc = 1;
 }
@@ -150,6 +150,7 @@ static void exec(uint8_t x)
 
 	case ZPU_POPPC:
 		pc = pop();
+		dtpc = 1;
 		break;
 
 	case ZPU_ADD:
