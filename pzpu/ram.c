@@ -1,3 +1,8 @@
+/* PZPU - Pseudo-ZPU emulator
+ * (C) MatrixS_Master, 2016
+ * GPL v2
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,7 +42,6 @@ int ram_load(const char* fn, uint32_t maxsz)
 		fclose(f);
 		return 1;
 	}
-//	sz--;
 	fseek(f,0,SEEK_SET);
 
 	if (fread(RAM,sz,1,f) < 1) {
@@ -54,12 +58,17 @@ int ram_load(const char* fn, uint32_t maxsz)
 void ram_wr_dw(uint32_t adr, uint32_t val)
 {
 	if (adr >= ramsize-3) {
-		fprintf(stderr,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
+		fflush(stdout);
+		fprintf(stdout,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
 		return;
 	}
-	RAM[adr++] = val & 0xff;
-	RAM[adr++] = (val >>= 8) & 0xff;
-	RAM[adr++] = (val >>= 8) & 0xff;
+	adr += 3;
+	RAM[adr--] = val & 0xff;
+	RAM[adr--] = (val >>= 8) & 0xff;
+	RAM[adr--] = (val >>= 8) & 0xff;
 	RAM[adr]   = (val >>  8);
 }
 
@@ -67,13 +76,16 @@ uint32_t ram_rd_dw(uint32_t adr)
 {
 	uint32_t r = 0;
 	if (adr >= ramsize-3) {
-		fprintf(stderr,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
+		fflush(stdout);
+		fprintf(stdout,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
 		return r;
 	}
-	adr += 3;
-	r  = RAM[adr--]; r <<= 8;
-	r |= RAM[adr--]; r <<= 8;
-	r |= RAM[adr--]; r <<= 8;
+	r  = RAM[adr++]; r <<= 8;
+	r |= RAM[adr++]; r <<= 8;
+	r |= RAM[adr++]; r <<= 8;
 	r |= RAM[adr];
 	return r;
 }
@@ -82,6 +94,9 @@ void ram_wr_b(uint32_t adr, uint8_t val)
 {
 	if (adr >= ramsize) {
 		fprintf(stderr,"Reached out of memory [WR B] (adr = 0x%08X)\n",adr);
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
 		return;
 	}
 	RAM[adr] = val;
@@ -91,6 +106,9 @@ uint8_t ram_rd_b(uint32_t adr)
 {
 	if (adr >= ramsize) {
 		fprintf(stderr,"Reached out of memory [RD B] (adr = 0x%08X)\n",adr);
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
 		return 0;
 	}
 	return RAM[adr];

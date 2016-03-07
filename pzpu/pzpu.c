@@ -1,3 +1,8 @@
+/* PZPU - Pseudo-ZPU emulator
+ * (C) MatrixS_Master, 2016
+ * GPL v2
+ */
+
 #include "pzpu.h"
 #include "ram.h"
 #include "io.h"
@@ -6,7 +11,7 @@ static uint8_t idim,dtpc,halt = 1;
 static uint32_t sp,pc,ram;
 
 #ifdef PZPU_DBG
-
+static unsigned long long my_ino = 0;
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -22,9 +27,9 @@ void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
 	if (code > 0x0f) {
 		if (!ilong) return;
-		msg("PC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
+		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",my_ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
 	} else {
-		msg("PC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
+		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",my_ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
 
@@ -36,7 +41,7 @@ void reset(uint32_t ramsize)
 	idim = 0;
 	dtpc = 0;
 	pc = 0x0;
-	sp = ramsize - 1;// - PZPU_STACKSZ;
+	sp = ramsize - 8;
 	ram = ramsize;
 }
 
@@ -75,8 +80,10 @@ static zpuint inline flip(zpuint x)
 	zpuint y = 0;
 	for (i = 0; i < 32; i++) {
 		y |= x & 0x80000000;
-		y >>= 1;
-		x <<= 1;
+		if (i < 31) {
+			y >>= 1;
+			x <<= 1;
+		}
 	}
 	return y;
 }
@@ -99,13 +106,15 @@ static void inline im(uint8_t x)
 		//first IM
 		v = 0;
 		uint8_t b = (x >> 6);
+//		msg("IM: x=0x%02x b=0x%02x ",x,b);
 		if (b) {
 			//propagate sign bit
-			v = 0xffffff10;
+			v = 0xffffff80;
 		}
+//		msg("v=0x%08x ",v);
 		push(v | x);
 	}
-#ifdef PZPU_DBG
+#if PZPU_DBG == 3
 	msg("IM: IDIM = %i X = 0x%02X  Result = 0x%08X\n",idim,x,(v|x));
 #endif
 	idim = 1;
@@ -128,7 +137,7 @@ static void inline iemu(uint8_t x)
 
 static void exec(uint8_t x)
 {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 	trace(x,0,0);
 #endif
 
@@ -184,33 +193,33 @@ static void exec(uint8_t x)
 	default:
 
 		if (x >= ZPU_IM) {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 			trace(x,16,x & 0x7f);
 #endif
 			im(x & 0x7f);
 			return; //don't reset IDIM flag
 
 		} else if (x >= ZPU_LOADSP) {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 			trace(x,18,(x & 0x1f) ^ 0x10);
 #endif
 			push(mem_rd_dw(sp_off((x & 0x1f) ^ 0x10)));
 
 		} else if (x >= ZPU_STORESP) {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 			trace(x,17,(x & 0x1f) ^ 0x10);
 #endif
 			zpuint a = sp_off((x & 0x1f) ^ 0x10);
 			mem_wr_dw(a,pop());
 
 		} else if (x >= ZPU_EMULATE) {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 			trace(x,20,x & 0x1f);
 #endif
 			iemu(x & 0x1f);
 
 		} else if (x >= ZPU_ADDSP) {
-#ifdef PZPU_DBG
+#if PZPU_DBG >= 2
 			trace(x,19,x & 0x0f);
 #endif
 			zpuint a = sp_off(x & 0x0f);

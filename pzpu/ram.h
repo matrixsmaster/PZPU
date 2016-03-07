@@ -1,8 +1,14 @@
+/* PZPU - Pseudo-ZPU emulator
+ * (C) MatrixS_Master, 2016
+ * GPL v2
+ */
 
 #ifndef RAM_H_
 #define RAM_H_
 
 #include <inttypes.h>
+
+#define RAM_OUT_ABORT
 
 void ram_init(uint32_t sz);
 void ram_release();

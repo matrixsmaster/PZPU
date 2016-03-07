@@ -1,16 +1,24 @@
+/* PZPU - Pseudo-ZPU emulator
+ * (C) MatrixS_Master, 2016
+ * GPL v2
+ */
 
 #ifndef PZPU_H_
 #define PZPU_H_
 
 #include <inttypes.h>
 
-#define PZPU_DBG 1
+//PZPU debug level (undef to disable debug output)
+#define PZPU_DBG 2
+
+//Transparent byte memory IO
 #define mem_rd_b ram_rd_b
 #define mem_wr_b ram_wr_b
 
+//Main type of emulated 32-bit value
 typedef uint32_t zpuint;
 
-//#define PZPU_STACKSZ 0x10000U
+//General IO space start point
 #define PZPU_IOSPACE 0x08000000U
 
 enum ZpuOpcode {
@@ -62,6 +70,7 @@ static const char mnemonics[0x10+5][DEFMNEMLEN] = {
 };
 #endif /* PZPU_DBG */
 
+//Emulator function prototypes
 void reset(uint32_t ramsize);
 void step();
 uint8_t status();
