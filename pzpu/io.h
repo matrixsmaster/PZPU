@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Enable debug output
-//#define PZPU_IODBG 1
+#define PZPU_IODBG 1
 
 #define PZPU_IOINTERACT 1
 
@@ -23,8 +23,8 @@ enum EBoardIO {
 	BZPU_GPIOdir = 0x8,
 	BZPU_UARTTx = 0xC,
 	BZPU_UARTRx = 0x10,
-	BZPU_Cnt1 = 0x14,
-	BZPU_Cnt2 = 0x18,
+	BZPU_CntL = 0x14,
+	BZPU_CntH = 0x18,
 	BZPU_INTmask = 0x20,
 	BZPU_UARTINTEn = 0x24,
 	BZPU_UARTINT = 0x28,

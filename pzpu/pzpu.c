@@ -8,7 +8,7 @@
 #include "io.h"
 
 static uint8_t idim,dtpc,halt = 1;
-static uint32_t sp,pc,ram;
+static uint32_t sp,pc,ram,cycle[2];
 
 #ifdef PZPU_DBG
 
@@ -45,6 +45,7 @@ void reset(uint32_t ramsize)
 	pc = 0x0;
 	sp = ramsize - 8;
 	ram = ramsize;
+	reset_cycles();
 }
 
 static uint32_t inline mem_rd_dw(uint32_t adr)
@@ -240,13 +241,33 @@ static void exec(uint8_t x)
 
 void step(void)
 {
+	//Check HALT state
 	if (halt) return;
+
+	//Execute next instruction
 	exec(mem_rd_b(pc));
+
+	//Increment PC (if needed)
 	if (!dtpc) pc++;
 	dtpc = 0;
+
+	//Increment 64-bit cycles counter
+	if (!(++cycle[0])) cycle[1]++;
 }
 
-uint8_t status()
+uint8_t status(void)
 {
 	return halt;
+}
+
+uint32_t get_cycles(uint8_t high)
+{
+	if (high) return cycle[1];
+	return cycle[0];
+}
+
+void reset_cycles(void)
+{
+	cycle[0] = 0;
+	cycle[1] = 0;
 }

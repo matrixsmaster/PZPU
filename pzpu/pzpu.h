@@ -78,8 +78,10 @@ static const char mnemonics[0x10+5][DEFMNEMLEN] = {
 
 //Emulator function prototypes
 void reset(uint32_t ramsize);
-void step();
-uint8_t status();
+void step(void);
+uint8_t status(void);
+uint32_t get_cycles(uint8_t high);
+void reset_cycles(void);
 
 
 #endif /* PZPU_H_ */

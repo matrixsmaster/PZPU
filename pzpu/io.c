@@ -5,6 +5,9 @@
 
 #include <stdio.h>
 #include "io.h"
+#include "pzpu.h"
+
+static uint32_t sampled_cycles[2];
 
 void io_wr(uint32_t adr, uint32_t be)
 {
@@ -24,6 +27,15 @@ void io_wr(uint32_t adr, uint32_t be)
 	switch (adr) {
 	case BZPU_UARTTx:
 		putchar(be & 0xFF);
+		break;
+
+	case BZPU_CntL:
+		if (be & 1)
+			reset_cycles();
+		else if (be & 2) {
+			sampled_cycles[0] = get_cycles(0);
+			sampled_cycles[1] = get_cycles(1);
+		}
 		break;
 
 	default:
@@ -54,6 +66,12 @@ uint32_t io_rd(uint32_t adr)
 #else
 		return 0; //Receive is invalid
 #endif
+
+	case BZPU_CntH:
+		return sampled_cycles[1];
+
+	case BZPU_CntL:
+		return sampled_cycles[0];
 
 	default:
 		break;

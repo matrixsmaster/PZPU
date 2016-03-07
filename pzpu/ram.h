@@ -8,7 +8,13 @@
 
 #include <inttypes.h>
 
-#define RAM_OUT_ABORT
+//Debug output enable
+//#define RAM_DBG 1
+
+//Abort on boundary tresspassing
+//#define RAM_OUT_ABORT 1
+
+//Prototypes
 
 void ram_init(uint32_t sz);
 void ram_release();

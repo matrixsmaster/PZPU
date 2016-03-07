@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
 	ram_init(MYSIZE);
 	if (ram_load(argv[1],MYSIZE)) {
-		printf("Unable to read file!\n");
+		printf("Unable to load file!\n");
 		ram_release();
 		return 2;
 	}
@@ -43,6 +43,8 @@ int main(int argc, char* argv[])
 	}
 
 	ram_release();
+
+	printf("Simulation cycles counter = 0x%08X%08X\n",get_cycles(1),get_cycles(0));
 
 	return 0;
 }
