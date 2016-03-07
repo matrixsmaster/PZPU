@@ -41,7 +41,7 @@ void reset(uint32_t ramsize)
 	reset_cycles();
 }
 
-static uint32_t inline mem_rd_dw(uint32_t adr)
+inline static uint32_t mem_rd_dw(uint32_t adr)
 {
 	if (adr >= PZPU_IOSPACE)
 		return io_rd(adr);
@@ -49,7 +49,7 @@ static uint32_t inline mem_rd_dw(uint32_t adr)
 		return ram_rd_dw(adr);
 }
 
-static void inline mem_wr_dw(uint32_t adr, uint32_t val)
+inline static void mem_wr_dw(uint32_t adr, uint32_t val)
 {
 	if (adr >= PZPU_IOSPACE)
 		io_wr(adr,val);
@@ -57,20 +57,20 @@ static void inline mem_wr_dw(uint32_t adr, uint32_t val)
 		ram_wr_dw(adr,val);
 }
 
-static zpuint inline pop(void)
+inline static zpuint pop(void)
 {
 	zpuint r = mem_rd_dw(sp);
 	sp += 4;
 	return r;
 }
 
-static void inline push(zpuint w)
+inline static void push(zpuint w)
 {
 	sp -= 4;
 	mem_wr_dw(sp,w);
 }
 
-static zpuint inline flip(zpuint x)
+inline static zpuint flip(zpuint x)
 {
 	int i;
 	zpuint y = 0;
@@ -84,14 +84,14 @@ static zpuint inline flip(zpuint x)
 	return y;
 }
 
-static void inline store(void)
+inline static void store(void)
 {
 	zpuint adr = pop();
 	zpuint val = pop();
 	mem_wr_dw(adr,val);
 }
 
-static void inline im(uint8_t x)
+inline static void im(uint8_t x)
 {
 	zpuint v;
 	if (idim) {
@@ -114,7 +114,7 @@ static void inline im(uint8_t x)
 	idim = 1;
 }
 
-static uint32_t inline sp_off(uint8_t w)
+inline static uint32_t sp_off(uint8_t w)
 {
 	uint32_t r = w;
 	r *= 4;
@@ -122,7 +122,7 @@ static uint32_t inline sp_off(uint8_t w)
 	return r;
 }
 
-static void inline iemu(uint8_t x)
+inline static void iemu(uint8_t x)
 {
 	push(pc+1);
 	pc = (uint32_t)x * 32;

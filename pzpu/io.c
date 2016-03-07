@@ -34,8 +34,11 @@ void io_wr(uint32_t adr, uint32_t be)
 	adr -= EBOARD_OFFSET;
 
 	switch (adr) {
+
 	case BZPU_UARTTx:
+#ifdef PZPU_IOINTERACT
 		putchar(be & 0xFF);
+#endif
 		break;
 
 	case BZPU_CntL:
@@ -67,6 +70,7 @@ uint32_t io_rd(uint32_t adr)
 	adr -= EBOARD_OFFSET;
 
 	switch (adr) {
+
 	case BZPU_UARTTx:
 		return 0x100; //Transmit buffer ready flag
 		break;
