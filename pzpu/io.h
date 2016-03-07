@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Enable debug output
-#define PZPU_IODBG 1
+//#define PZPU_IODBG 1
 
 #define PZPU_IOINTERACT 1
 
@@ -31,7 +31,8 @@ enum EBoardIO {
 	BZPU_TmrINTEn = 0x2C,
 	BZPU_TmrINT = 0x30,
 	BZPU_TmrPeriod = 0x34,
-	BZPU_TmrCount = 0x38
+	BZPU_TmrCount = 0x38,
+	BZPU_MHZ = 0x3C
 };
 
 void io_wr(uint32_t adr, uint32_t be);

@@ -73,6 +73,9 @@ uint32_t io_rd(uint32_t adr)
 	case BZPU_CntL:
 		return sampled_cycles[0];
 
+	case BZPU_MHZ:
+		return 1;
+
 	default:
 		break;
 	}
