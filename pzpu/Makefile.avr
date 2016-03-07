@@ -1,0 +1,27 @@
+# PZPU - Pseudo-ZPU emulator
+# (C) MatrixS_Master, 2016
+# GPL v2
+#
+
+MCU = atmega328p
+
+CC = avr-gcc
+CCFLAGS = -O2 -Wall -mmcu=$(MCU) -Wextra
+LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
+APP = pzpu_avr
+
+OBJS = debug.o ram.o io.o pzpu.o main.o
+
+all: $(APP).hex
+
+$(APP).hex: $(APP).elf
+	avr-objcopy -j .text -j .data -O ihex $(APP).elf $(APP).hex
+
+$(APP).elf: $(OBJS)
+	$(CC) $(LDFLAGS) -o $(APP) $(OBJS)
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(APP).hex $(APP).elf

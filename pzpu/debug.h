@@ -8,7 +8,8 @@
 
 #include <inttypes.h>
 
-#define DEBUG_OS_ENABLED 1
+//Enable OS terminal IO functions
+//#define DEBUG_OS_ENABLED 1
 
 void msg(uint8_t err, const char* fmt, ...);
 

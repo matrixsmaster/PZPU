@@ -1,0 +1,24 @@
+# PZPU - Pseudo-ZPU emulator
+# (C) MatrixS_Master, 2016
+# GPL v2
+#
+
+CC = gcc
+CCFLAGS = -O2 -g -Wall
+LDFLAGS = 
+APP = pzpu
+
+MODE = -DRAM_OS_ENABLED=1 -DPZPU_IOINTERACT=1 -DDEBUG_OS_ENABLED=1
+
+OBJS = debug.o ram.o io.o pzpu.o main.o
+
+all: $(APP)
+
+$(APP): $(OBJS)
+	$(CC) $(LDFLAGS) -o $(APP) $(OBJS)
+
+%.o: %.c
+	$(CC) $(CCFLAGS) $(MODE) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(APP)
