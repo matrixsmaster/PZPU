@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //PZPU debug level (undef to disable debug output)
-#define PZPU_DBG 2
+//#define PZPU_DBG 2
 
 //Transparent byte memory IO
 #define mem_rd_b ram_rd_b
@@ -21,6 +21,7 @@ typedef uint32_t zpuint;
 //General IO space start point
 #define PZPU_IOSPACE 0x08000000U
 
+//ZPU opcodes table
 enum ZpuOpcode {
 	ZPU_BREAK = 0,
 	ZPU_PUSHSP = 2,
@@ -34,6 +35,7 @@ enum ZpuOpcode {
 	ZPU_STORE = 12,
 	ZPU_POPSP = 13,
 	ZPU_NOP = 11,
+	/* "long" opcodes */
 	ZPU_IM = 0x80,
 	ZPU_STORESP = 0x40,
 	ZPU_LOADSP = 0x60,
@@ -42,9 +44,12 @@ enum ZpuOpcode {
 };
 
 #ifdef PZPU_DBG
+
+//Max mnemonic length macros
 #define DEFMNEMLEN 10
 #define MNEMOUTP "%10s"
 
+//Assembler mnemonics table
 static const char mnemonics[0x10+5][DEFMNEMLEN] = {
 		"BREAK",
 		"N/A",
@@ -62,6 +67,7 @@ static const char mnemonics[0x10+5][DEFMNEMLEN] = {
 		"POPSP",
 		"N/A",
 		"N/A",
+		/* longs */
 		"IM",
 		"STORESP",
 		"LOADSP",

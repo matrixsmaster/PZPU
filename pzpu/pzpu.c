@@ -11,9 +11,11 @@ static uint8_t idim,dtpc,halt = 1;
 static uint32_t sp,pc,ram;
 
 #ifdef PZPU_DBG
-static unsigned long long my_ino = 0;
+
 #include <stdio.h>
 #include <stdarg.h>
+
+static unsigned long long ino = 0;
 
 void msg(const char* fmt, ...)
 {
@@ -27,9 +29,9 @@ void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
 	if (code > 0x0f) {
 		if (!ilong) return;
-		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",my_ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
+		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
 	} else {
-		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",my_ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
+		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
 
@@ -80,7 +82,7 @@ static zpuint inline flip(zpuint x)
 	zpuint y = 0;
 	for (i = 0; i < 32; i++) {
 		y |= x & 0x80000000;
-		if (i < 31) {
+		if (i < 31) { //don't shift last bit
 			y >>= 1;
 			x <<= 1;
 		}
@@ -106,12 +108,10 @@ static void inline im(uint8_t x)
 		//first IM
 		v = 0;
 		uint8_t b = (x >> 6);
-//		msg("IM: x=0x%02x b=0x%02x ",x,b);
 		if (b) {
 			//propagate sign bit
 			v = 0xffffff80;
 		}
-//		msg("v=0x%08x ",v);
 		push(v | x);
 	}
 #if PZPU_DBG == 3
