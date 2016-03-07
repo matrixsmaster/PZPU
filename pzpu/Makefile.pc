@@ -20,5 +20,6 @@ $(APP): $(OBJS)
 %.o: %.c
 	$(CC) $(CCFLAGS) $(MODE) -c $< -o $@
 
+.PHONY: clean
 clean:
 	rm -f $(OBJS) $(APP)

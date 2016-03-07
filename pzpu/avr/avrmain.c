@@ -4,7 +4,8 @@
  */
 
 #include <avr/io.h>
-#include "pzpu.h"
+#include "../pzpu.h"
+#include "sd_raw.h"
 
 int main(void)
 {
