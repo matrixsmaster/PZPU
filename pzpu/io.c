@@ -48,6 +48,13 @@ uint32_t io_rd(uint32_t adr)
 		return 0x100; //Transmit buffer ready flag
 		break;
 
+	case BZPU_UARTRx:
+#ifdef PZPU_IOINTERACT
+		return (0x100 | getchar()); //Receive is valid
+#else
+		return 0; //Receive is invalid
+#endif
+
 	default:
 		break;
 	}
