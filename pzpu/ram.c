@@ -4,12 +4,19 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "ram.h"
 
 static uint8_t* RAM = NULL;
 static uint32_t ramsize = 0;
+
+#ifdef RAM_OS_ENABLED
+#include <stdio.h>
+#endif
+
+#ifdef RAM_DBG
+#include "debug.h"
+#endif
 
 void ram_init(uint32_t sz)
 {
@@ -19,7 +26,7 @@ void ram_init(uint32_t sz)
 	memset(RAM,0,sz);
 
 #ifdef RAM_DBG
-	printf("RAM of %u bytes successfully initialized.\n",sz);
+	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
 #endif
 }
 
@@ -31,10 +38,11 @@ void ram_release()
 	RAM = NULL;
 
 #ifdef RAM_DBG
-	printf("RAM released.\n");
+	msg(0,"RAM released.\n");
 #endif
 }
 
+#ifdef RAM_OS_ENABLED
 int ram_load(const char* fn, uint32_t maxsz)
 {
 	size_t sz;
@@ -45,7 +53,7 @@ int ram_load(const char* fn, uint32_t maxsz)
 	sz = ftell(f);
 	if (sz >= maxsz) {
 #ifdef RAM_DBG
-		fprintf(stderr,"File too large (%lu bytes), RAM size is only %u bytes.\n",sz,maxsz);
+		msg(1,"File too large (%lu bytes), RAM size is only %u bytes.\n",sz,maxsz);
 #endif
 		fclose(f);
 		return 1;
@@ -54,26 +62,26 @@ int ram_load(const char* fn, uint32_t maxsz)
 
 	if (fread(RAM,sz,1,f) < 1) {
 #ifdef RAM_DBG
-		fprintf(stderr,"Can't load all the bytes.\n");
+		msg(1,"Can't load all the bytes.\n");
 #endif
 		fclose(f);
 		return 2;
 	}
 
 #ifdef RAM_DBG
-	printf("File '%s' data (%lu bytes) successfully loaded into RAM.\n",fn,sz);
+	msg(0,"File '%s' data (%lu bytes) successfully loaded into RAM.\n",fn,sz);
 #endif
 
 	fclose(f);
 	return 0;
 }
+#endif /* RAM_OS_ENABLED */
 
 void ram_wr_dw(uint32_t adr, uint32_t val)
 {
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
-		fflush(stdout);
-		fprintf(stdout,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -92,8 +100,7 @@ uint32_t ram_rd_dw(uint32_t adr)
 	uint32_t r = 0;
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
-		fflush(stdout);
-		fprintf(stdout,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -111,7 +118,7 @@ void ram_wr_b(uint32_t adr, uint8_t val)
 {
 	if (adr >= ramsize) {
 #ifdef RAM_DBG
-		fprintf(stderr,"Reached out of memory [WR B] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [WR B] (adr = 0x%08X)\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -125,7 +132,7 @@ uint8_t ram_rd_b(uint32_t adr)
 {
 	if (adr >= ramsize) {
 #ifdef RAM_DBG
-		fprintf(stderr,"Reached out of memory [RD B] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [RD B] (adr = 0x%08X)\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();

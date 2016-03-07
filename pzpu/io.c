@@ -3,23 +3,32 @@
  * GPL v2
  */
 
-#include <stdio.h>
 #include "io.h"
 #include "pzpu.h"
 
 static uint32_t sampled_cycles[2];
 
+#ifdef PZPU_IOINTERACT
+#include <stdio.h>
+#endif
+
+#ifdef PZPU_IODBG
+#include "debug.h"
+#endif
+
 void io_wr(uint32_t adr, uint32_t be)
 {
 #ifdef PZPU_IODBG
 	if (be > 32 && be < 255)
-		printf("IO WR to 0x%08X : %u [%c]\n",adr,be,(char)be);
+		msg(0,"IO WR to 0x%08X : %u [%c]\n",adr,be,(char)be);
 	else
-		printf("IO WR to 0x%08X : %u\n",adr,be);
+		msg(0,"IO WR to 0x%08X : %u\n",adr,be);
 #endif
 
 	if (adr < EBOARD_OFFSET) {
-		fprintf(stderr,"Unknown IO addr 0x%08X\n",adr);
+#ifdef PZPU_IODBG
+		msg(1,"Unknown IO addr 0x%08X\n",adr);
+#endif
 		return;
 	}
 	adr -= EBOARD_OFFSET;
@@ -46,11 +55,13 @@ void io_wr(uint32_t adr, uint32_t be)
 uint32_t io_rd(uint32_t adr)
 {
 #ifdef PZPU_IODBG
-	printf("IO RD attempt : 0x%08X\n",adr);
+	msg(0,"IO RD attempt : 0x%08X\n",adr);
 #endif
 
 	if (adr < EBOARD_OFFSET) {
-		fprintf(stderr,"Unknown IO addr 0x%08X\n",adr);
+#ifdef PZPU_IODBG
+		msg(1,"Unknown IO addr 0x%08X\n",adr);
+#endif
 		return 0;
 	}
 	adr -= EBOARD_OFFSET;

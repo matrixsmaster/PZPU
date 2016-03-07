@@ -11,6 +11,8 @@
 //Debug output enable
 //#define RAM_DBG 1
 
+#define RAM_OS_ENABLED 1
+
 //Abort on boundary tresspassing
 //#define RAM_OUT_ABORT 1
 

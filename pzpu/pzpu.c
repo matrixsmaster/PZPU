@@ -12,26 +12,19 @@ static uint32_t sp,pc,ram,cycle[2];
 
 #ifdef PZPU_DBG
 
-#include <stdio.h>
-#include <stdarg.h>
+#include "debug.h"
 
-static unsigned long long ino = 0;
-
-void msg(const char* fmt, ...)
-{
-	va_list vl;
-	va_start(vl,fmt);
-	vprintf(fmt,vl);
-	va_end(vl);
-}
+static unsigned long long ino = 0; //internal instruction number (for trace generation only)
 
 void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
 	if (code > 0x0f) {
 		if (!ilong) return;
-		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
+		msg(0,"%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "] arg = %hhu\n",
+				ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[ilong],arg);
 	} else {
-		msg("%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
+		msg(0,"%llu\tPC: 0x%08X  SP: 0x%08X [0x%08X]  I: 0x%02X S[" MNEMOUTP "]\n",
+				ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
 
@@ -115,8 +108,8 @@ static void inline im(uint8_t x)
 		}
 		push(v | x);
 	}
-#if PZPU_DBG == 3
-	msg("IM: IDIM = %i X = 0x%02X  Result = 0x%08X\n",idim,x,(v|x));
+#if PZPU_DBG >= 3
+	msg(0,"IM: IDIM = %i X = 0x%02X  Result = 0x%08X\n",idim,x,(v|x));
 #endif
 	idim = 1;
 }
@@ -228,7 +221,7 @@ static void exec(uint8_t x)
 
 		} else {
 #ifdef PZPU_DBG
-			msg("Unknown instruction 0x%02X at PC = 0x%08X\n",x,pc);
+			msg(1,"Unknown instruction 0x%02X at PC = 0x%08X\n",x,pc);
 #endif
 			halt = 1;
 
