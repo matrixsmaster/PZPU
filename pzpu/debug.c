@@ -7,13 +7,23 @@
 #include <stdio.h>
 #include "debug.h"
 
+#if EMBED_AVR
+#include "avr/avr_io.h"
+#endif
+
 void msg(uint8_t err, const char* fmt, ...)
 {
 	va_list vl;
 	va_start(vl,fmt);
 
-#ifdef DEBUG_OS_ENABLED
+#if DEBUG_OS_ENABLED
 	vfprintf((err? stderr:stdout),fmt,vl);
+
+#elif EMBED_AVR
+	char str[DEBUG_MAXMSGLEN];
+	vsnprintf(str,sizeof(str),fmt,vl);
+	USARTWriteString(str);
+
 #endif
 
 	va_end(vl);

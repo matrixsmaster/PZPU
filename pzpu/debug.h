@@ -11,6 +11,9 @@
 //Enable OS terminal IO functions
 //#define DEBUG_OS_ENABLED 1
 
+//Max message length for embedded devices
+#define DEBUG_MAXMSGLEN 52
+
 void msg(uint8_t err, const char* fmt, ...);
 
 

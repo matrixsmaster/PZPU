@@ -171,9 +171,11 @@ static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
  */
 uint8_t sd_raw_init()
 {
+#ifdef USE_RAW_LOCKS
     /* enable inputs for reading card status */
     configure_pin_available();
     configure_pin_locked();
+#endif
 
     /* enable outputs for MOSI, SCK, SS, input for MISO */
     configure_pin_mosi();
@@ -197,8 +199,10 @@ uint8_t sd_raw_init()
     /* initialization procedure */
     sd_raw_card_type = 0;
     
+#ifdef USE_RAW_LOCKS
     if(!sd_raw_available())
         return 0;
+#endif
 
     /* card needs 74 cycles minimum to start up */
     for(uint8_t i = 0; i < 10; ++i)
@@ -338,7 +342,11 @@ uint8_t sd_raw_init()
  */
 uint8_t sd_raw_available()
 {
+#ifdef USE_RAW_LOCKS
     return get_pin_available() == 0x00;
+#else
+	return 1;
+#endif
 }
 
 /**
@@ -349,7 +357,11 @@ uint8_t sd_raw_available()
  */
 uint8_t sd_raw_locked()
 {
+#ifdef USE_RAW_LOCKS
     return get_pin_locked() == 0x00;
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -665,8 +677,10 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
  */
 uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
 {
+#ifdef USE_RAW_LOCKS
     if(sd_raw_locked())
         return 0;
+#endif
 
     offset_t block_address;
     uint16_t block_offset;
