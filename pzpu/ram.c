@@ -7,41 +7,111 @@
 #include <string.h>
 #include "ram.h"
 
-static uint8_t* RAM = NULL;
-static uint32_t ramsize = 0;
-
-//#define EMBED_AVR 1
+#define EMBED_AVR 1
 
 #if RAM_OS_ENABLED
 #include <stdio.h>
 #elif EMBED_AVR
-#include "avr/io.h"
+#include "avr/avr_io.h"
+#include "avr/sd_raw.h"
 #endif
 
 #ifdef RAM_DBG
 #include "debug.h"
 #endif
 
+#if !EMBED_AVR
+static uint8_t* RAM = NULL;
+#endif
+
+static uint32_t ramsize = 0;
+
 #if EMBED_AVR
 
 int ram_init(uint32_t sz)
 {
-	//check
+	uint32_t smpl = 0xABCDEF01;
+
 	//sample first and last locations
+	if (!sd_raw_write(img_offset,(uint8_t*)&smpl,4))
+		return 1;
+
+	if (!sd_raw_write(img_offset+sz-1,(uint8_t*)&smpl,4))
+		return 2;
+
+	if (!sd_raw_read(img_offset,(uint8_t*)&smpl,4))
+		return 3;
+	if (smpl != 0xABCDEF01)
+		return 4;
+
+	if (!sd_raw_read(img_offset+sz-1,(uint8_t*)&smpl,4))
+		return 5;
+	if (smpl != 0xABCDEF01)
+		return 6;
+
+	ramsize = sz;
+
 #ifdef RAM_DBG
 	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
 #endif
+
+	return 0;
 }
+
 void ram_release()
 {
+#ifdef RAM_DBG
+	msg(0,"Releasing RAM... ");
+#endif
 
+	sd_raw_sync();
+
+#ifdef RAM_DBG
+	msg(0,"done.\n");
+#endif
 }
 
-void ram_wr_dw(uint32_t adr, uint32_t val);
-void ram_wr_b(uint32_t adr, uint8_t val);
+uint8_t ram_rd_b(uint32_t adr)
+{
+	uint8_t r = 0;
+	if (adr >= ramsize) return 0;
+	if (sd_raw_read(img_offset+adr,&r,1))
+		return r;
+	else
+		return 0;
+}
 
-uint32_t ram_rd_dw(uint32_t adr);
-uint8_t ram_rd_b(uint32_t adr);
+void ram_wr_b(uint32_t adr, uint8_t val)
+{
+	if (adr >= ramsize) return;
+	sd_raw_read(img_offset+adr,&val,1);
+}
+
+uint32_t ram_rd_dw(uint32_t adr)
+{
+	uint32_t r = 0;
+	if (adr >= ramsize-3) return 0;
+//	r  = ram_rd_b(adr++); r <<= 8;
+//	r |= ram_rd_b(adr++); r <<= 8;
+//	r |= ram_rd_b(adr++); r <<= 8;
+//	r |= ram_rd_b(adr);
+//	return r;
+	if (sd_raw_read(img_offset+adr,(uint8_t*)&r,4))
+		return r;
+	else
+		return 0;
+}
+
+void ram_wr_dw(uint32_t adr, uint32_t val)
+{
+	if (adr >= ramsize-3) return;
+//	adr += 3;
+//	ram_wr_b(adr--,val);
+//	ram_wr_b(adr--,val >>= 8);
+//	ram_wr_b(adr--,val >>= 8);
+//	ram_wr_b(adr,val >>  8);
+	sd_raw_write(img_offset+adr,(uint8_t*)&val,4);
+}
 
 #else
 

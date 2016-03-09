@@ -16,6 +16,6 @@ char USARTReadIsReady(void);
 void USARTWriteChar(const char data);
 void USARTWriteString(const char* str);
 
-extern uint32_t img_offset,img_length;
+extern uint32_t img_offset;
 
 #endif /* AVR_IO_H_ */

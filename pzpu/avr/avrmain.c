@@ -56,7 +56,14 @@ card_reset:
 	}
 	msg(0,"Image length = 0x%08X"UART_LEND,img_length);
 
-	ram_init(img_length);
+	//Try to initialize our virtual RAM
+	if (ram_init(img_length)) {
+#ifdef AVR_DBG
+		msg(1,"Error initializing RAM! Code = %hu"UART_LEND,ram_init(img_length));
+#endif
+		goto card_reset;
+	}
+	msg(0,"RAM init complete."UART_LEND);
 
 	//Main loop
 #ifdef AVR_DBG
