@@ -22,11 +22,14 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	ram_init(MYSIZE);
+	if (ram_init(MYSIZE)) {
+		printf("Unable to allocate RAM (try lesser size value)\n");
+		return 2;
+	}
 	if (ram_load(argv[1],MYSIZE)) {
 		printf("Unable to load file!\n");
 		ram_release();
-		return 2;
+		return 3;
 	}
 
 	reset(MYSIZE);

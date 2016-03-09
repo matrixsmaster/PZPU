@@ -7,7 +7,7 @@
 
 void USARTInit(const uint16_t baud)
 {
-	uint16_t val = ((uint16_t)F_CPU / (baud * 16)) - 1;
+	uint16_t val = ((uint32_t)F_CPU / baud / 16) - 1;
     UBRR0L = val & 0xff;
     UBRR0H = val >> 8;
     UCSR0B = (1<<RXEN0)|(1<<TXEN0);

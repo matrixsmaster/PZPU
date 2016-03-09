@@ -9,6 +9,7 @@
 #include "sd_raw.h"
 #include "avr_io.h"
 #include "../pzpu.h"
+#include "../ram.h"
 #include "../debug.h"
 
 uint32_t img_offset,img_length;
@@ -55,7 +56,7 @@ card_reset:
 	}
 	msg(0,"Image length = 0x%08X"UART_LEND,img_length);
 
-	//TODO: RAM init
+	ram_init(img_length);
 
 	//Main loop
 #ifdef AVR_DBG
@@ -64,6 +65,9 @@ card_reset:
 	while (!status()) {
 		step();
 	}
+#ifdef AVR_DBG
+	USARTWriteString("End of main loop."UART_LEND);
+#endif
 
 	//End of user program execution
 	sd_raw_sync();

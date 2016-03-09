@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Debug output enable
-//#define RAM_DBG 1
+#define RAM_DBG 1
 
 //Enable OS functions (file I/O)
 //#define RAM_OS_ENABLED 1
@@ -19,7 +19,7 @@
 
 //Prototypes
 
-void ram_init(uint32_t sz);
+int ram_init(uint32_t sz);
 void ram_release();
 
 int ram_load(const char* fn, uint32_t maxsz);

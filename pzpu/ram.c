@@ -10,24 +10,54 @@
 static uint8_t* RAM = NULL;
 static uint32_t ramsize = 0;
 
-#ifdef RAM_OS_ENABLED
+//#define EMBED_AVR 1
+
+#if RAM_OS_ENABLED
 #include <stdio.h>
+#elif EMBED_AVR
+#include "avr/io.h"
 #endif
 
 #ifdef RAM_DBG
 #include "debug.h"
 #endif
 
-void ram_init(uint32_t sz)
+#if EMBED_AVR
+
+int ram_init(uint32_t sz)
+{
+	//check
+	//sample first and last locations
+#ifdef RAM_DBG
+	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
+#endif
+}
+void ram_release()
+{
+
+}
+
+void ram_wr_dw(uint32_t adr, uint32_t val);
+void ram_wr_b(uint32_t adr, uint8_t val);
+
+uint32_t ram_rd_dw(uint32_t adr);
+uint8_t ram_rd_b(uint32_t adr);
+
+#else
+
+int ram_init(uint32_t sz)
 {
 	if (RAM) ram_release();
 	RAM = (uint8_t*)malloc(sz);
+	if (!RAM) return 1;
 	ramsize = sz;
 	memset(RAM,0,sz);
 
 #ifdef RAM_DBG
 	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
 #endif
+
+	return 0;
 }
 
 void ram_release()
@@ -141,3 +171,5 @@ uint8_t ram_rd_b(uint32_t adr)
 	}
 	return RAM[adr];
 }
+
+#endif /* Main implementation switch */
