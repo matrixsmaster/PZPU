@@ -3,6 +3,7 @@
 
 int main(int argc, char **argv)
 {
+#if 0
 	int c;
 	do {
 		printf("Hello world!\n");
@@ -11,5 +12,8 @@ int main(int argc, char **argv)
 		printf("You pressed (%02x) '%c'\n", c, c);
 		printf("Time is %u\n",time(NULL));
 	} while (c != 'q');
+#else
+	printf("Hello world!\n");
+#endif
 	return 0;
 }

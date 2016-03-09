@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //PZPU debug level (undef to disable debug output)
-//#define PZPU_DBG 5
+#define PZPU_DBG 2
 
 //Transparent byte memory IO
 #define mem_rd_b ram_rd_b

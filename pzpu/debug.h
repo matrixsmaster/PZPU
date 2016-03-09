@@ -12,7 +12,7 @@
 //#define DEBUG_OS_ENABLED 1
 
 //Max message length for embedded devices
-#define DEBUG_MAXMSGLEN 52
+#define DEBUG_MAXMSGLEN 56
 
 void msg(uint8_t err, const char* fmt, ...);
 

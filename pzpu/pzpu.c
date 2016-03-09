@@ -14,6 +14,9 @@ static uint32_t sp,pc,ram,cycle[2];
 
 #include "debug.h"
 
+#define KLUUDGEE 1
+//FIXME: temporary KLUDGE !!!!!!111oneoneone
+#ifndef KLUUDGEE
 static unsigned long long ino = 0; //internal instruction number (for trace generation only)
 
 void trace(uint8_t code, uint8_t ilong, uint8_t arg)
@@ -27,6 +30,13 @@ void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 				ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
+#else
+
+void trace(uint8_t code, uint8_t ilong, uint8_t arg)
+{
+	msg(0,"PC:0x%08lX SP:0x%08lX I:0x%02X [%hu]\r\n",pc,sp,code,arg);
+}
+#endif //kludge
 
 #endif /* PZPU_DBG */
 

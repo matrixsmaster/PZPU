@@ -7,7 +7,7 @@
 #include <string.h>
 #include "ram.h"
 
-#define EMBED_AVR 1
+//#define EMBED_AVR 1
 
 #if RAM_OS_ENABLED
 #include <stdio.h>
@@ -32,22 +32,22 @@ int ram_init(uint32_t sz)
 {
 	uint32_t smpl = 0xABCDEF01;
 
-	//sample first and last locations
-	if (!sd_raw_write(img_offset,(uint8_t*)&smpl,4))
-		return 1;
-
-	if (!sd_raw_write(img_offset+sz-1,(uint8_t*)&smpl,4))
-		return 2;
+	//sample first and last locations (FIXME: brokes out the code)
+//	if (!sd_raw_write(img_offset,(uint8_t*)&smpl,4))
+//		return 1;
+//
+//	if (!sd_raw_write(img_offset+sz-1,(uint8_t*)&smpl,4))
+//		return 2;
 
 	if (!sd_raw_read(img_offset,(uint8_t*)&smpl,4))
 		return 3;
-	if (smpl != 0xABCDEF01)
-		return 4;
+//	if (smpl != 0xABCDEF01)
+//		return 4;
 
 	if (!sd_raw_read(img_offset+sz-1,(uint8_t*)&smpl,4))
 		return 5;
-	if (smpl != 0xABCDEF01)
-		return 6;
+//	if (smpl != 0xABCDEF01)
+//		return 6;
 
 	ramsize = sz;
 

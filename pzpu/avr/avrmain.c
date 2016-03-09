@@ -21,6 +21,9 @@ int main(void)
 
 #ifdef AVR_DBG
 	USARTWriteString("Alive!"UART_LEND);
+	msg(0,"int = %d"UART_LEND,sizeof(int));
+	msg(0,"long = %d"UART_LEND,sizeof(long));
+	msg(0,"long long = %d"UART_LEND,sizeof(long long));
 #endif
 
 	//Init SD card interface
@@ -45,7 +48,7 @@ card_reset:
 #endif
 		goto card_reset;
 	}
-	msg(0,"Image offset = 0x%08X"UART_LEND,img_offset);
+	msg(0,"Image offset = 0x%08lX"UART_LEND,img_offset);
 
 	//Read image (memory) size
 	if ((!sd_raw_read(4,(uint8_t*)&img_length,4)) || (!img_length)) {
@@ -54,7 +57,7 @@ card_reset:
 #endif
 		goto card_reset;
 	}
-	msg(0,"Image length = 0x%08X"UART_LEND,img_length);
+	msg(0,"Image length = 0x%08lX"UART_LEND,img_length);
 
 	//Try to initialize our virtual RAM
 	if (ram_init(img_length)) {
@@ -65,21 +68,36 @@ card_reset:
 	}
 	msg(0,"RAM init complete."UART_LEND);
 
+	//Everything is ready. Reset PZPU
+#ifndef AVR_DRYRUN
+	reset(img_length);
+#ifdef AVR_DBG
+	USARTWriteString("PZPU reset complete."UART_LEND);
+#endif
+#endif
+
 	//Main loop
 #ifdef AVR_DBG
 	USARTWriteString("Entering main loop..."UART_LEND);
 #endif
 	while (!status()) {
 		step();
+		USARTWriteChar('.');
+		USARTReadChar(); //step-by-step
+//		msg(0,"CC=%08lX\r\n",get_cycles(0));
 	}
 #ifdef AVR_DBG
 	USARTWriteString("End of main loop."UART_LEND);
 #endif
 
 	//End of user program execution
-	sd_raw_sync();
+	ram_release();
 	LED0_OFF;
 
+#ifdef AVR_DBG
+	USARTWriteString("Emulator halted."UART_LEND);
+#endif
+
 	//Infinite loop
-	for (;;) ;
+	for (;;) ; //TODO: put CPU into sleep mode
 }

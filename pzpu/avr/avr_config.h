@@ -9,6 +9,9 @@
 //Enable debugging of internal functions
 #define AVR_DBG 1
 
+//Enable dry-run (without real execution)
+//#define AVR_DRYRUN 1
+
 //20MHz external crystal
 #define F_CPU 20000000
 

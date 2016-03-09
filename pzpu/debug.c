@@ -22,6 +22,7 @@ void msg(uint8_t err, const char* fmt, ...)
 #elif EMBED_AVR
 	char str[DEBUG_MAXMSGLEN];
 	vsnprintf(str,sizeof(str),fmt,vl);
+	if (err) USARTWriteString("ERR: ");
 	USARTWriteString(str);
 
 #endif
