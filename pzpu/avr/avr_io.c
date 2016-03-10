@@ -42,14 +42,12 @@ void USARTWriteString(const char* str)
 inline uint32_t swap(uint32_t x)
 {
 	//FIXME: need more speedy solution
-    uint8_t a[4],temp;
-    memcpy (a,&x,4);
-    temp = a[0];
-    a[0] = a[3];
-    a[3] = temp;
-    temp = a[1];
-    a[1] = a[2];
-    a[2] = temp;
-    memcpy (&x,a,4);
-    return x;
+	uint32_t y = (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= x;
+	return y;
 }
