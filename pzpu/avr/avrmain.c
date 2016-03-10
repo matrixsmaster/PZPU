@@ -22,6 +22,7 @@ volatile uint32_t chip_time;
 ISR(TIMER1_COMPA_vect)
 {
 	chip_time++;
+//	LED0_TGGL;
 }
 #endif
 
@@ -35,7 +36,7 @@ int main(void)
 
 #if (F_CPU==20000000)
 	TCCR1B = (1<<WGM12)|(1<<CS12)|(1<<CS10);
-	OCR1A = 39062U; //2Hz
+	OCR1A = 9765U; //2Hz
 #else
 #error "Please correct the timer values for different CPU speed!"
 #endif /* speed check */
@@ -76,7 +77,7 @@ card_reset:
 #endif
 		goto card_reset;
 	}
-	msg(0,"Image offset = 0x%08lX",img_offset);
+	msg(0,"Image offset = 0x%08lX\n",img_offset);
 
 	//Read image (memory) size
 	if ((!sd_raw_read(4,(uint8_t*)&img_length,4)) || (!img_length)) {
@@ -110,13 +111,15 @@ card_reset:
 #endif
 	while (!status()) {
 		step();
-		USARTWriteChar('.');
+		LED0_TGGL;
+//		USARTWriteChar('.');
 //		USARTReadChar(); //step-by-step
 //		msg(0,"CC=%08lX\r\n",get_cycles(0));
 	}
 #ifdef AVR_DBG
 	USARTWriteString("End of main loop.\n");
 #endif
+	msg(0,"Cycles = 0x"PFMT_32XINT PFMT_32XINT"\n",get_cycles(1),get_cycles(0));
 
 	//End of user program execution
 	ram_release(); //sync and disconnect RAM card
@@ -126,8 +129,17 @@ card_reset:
 #ifdef AVR_DBG
 	USARTWriteString("Emulator halted.\n");
 #endif
+
 #ifdef AVR_TIME
-	msg(0,"Time passed = "PFMT_32UINT"\n",chip_time);
+	msg(0,"Time passed = "PFMT_32UINT" 2xSec\n",chip_time);
+	if (chip_time) {
+		uint64_t _cc = get_cycles(1);
+		_cc <<= 32;
+		_cc |= get_cycles(0);
+		uint16_t _ch = chip_time >> 1;
+		_ch = _cc / _ch;
+		msg(0,"Execution speed (med) = "PFMT_16UINT" inst/sec\n",_ch);
+	}
 #endif
 
 	//Infinite loop

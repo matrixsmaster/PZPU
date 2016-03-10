@@ -27,5 +27,6 @@
 //LED0 config (PB0)
 #define LED0_ON { DDRB |= 1; PORTB |= 1; }
 #define LED0_OFF { DDRB |= 1; PORTB &= ~1; }
+#define LED0_TGGL PORTB ^= 1
 
 #endif /* AVR_CONFIG_H_ */
