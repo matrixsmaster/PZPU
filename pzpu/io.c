@@ -41,10 +41,9 @@ void io_wr(uint32_t adr, uint32_t be)
 	switch (adr) {
 
 	case BZPU_UARTTx:
-#ifdef PZPU_IOINTERACT
+#if PZPU_IOINTERACT
 		putchar(be & 0xFF);
-#endif
-#ifdef EMBED_AVR
+#elif EMBED_AVR
 		USARTWriteChar(be & 0xFF);
 #endif
 		break;
@@ -84,8 +83,10 @@ uint32_t io_rd(uint32_t adr)
 		break;
 
 	case BZPU_UARTRx:
-#ifdef PZPU_IOINTERACT
+#if PZPU_IOINTERACT
 		return (0x100 | getchar()); //Receive is valid
+#elif EMBED_AVR
+		return (0x100 | USARTReadChar()); //Receive is valid
 #else
 		return 0; //Receive is invalid
 #endif
@@ -97,7 +98,7 @@ uint32_t io_rd(uint32_t adr)
 		return sampled_cycles[0];
 
 	case BZPU_MHZ:
-		return 1;
+		return 1; //FIXME
 
 	default:
 		break;

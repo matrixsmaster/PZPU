@@ -41,17 +41,12 @@ void USARTWriteString(const char* str)
 
 inline uint32_t swap(uint32_t x)
 {
-	//FIXME: need more speedy solution
-	uint16_t a = x;
-	uint16_t b = x >> 16;
-	uint8_t t = a;
-	a >>= 8;
-	a |= t << 8;
-	t = b;
-	b >>= 8;
-	b |= t << 8;
-	x = a;
-	x <<= 16;
-	x |= b;
-	return x;
+	uint32_t y = (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= (x & 0xff);
+	y <<= 8; x >>= 8;
+	y |= x;
+    return y;
 }

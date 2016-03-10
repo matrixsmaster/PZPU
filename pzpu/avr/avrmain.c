@@ -112,9 +112,6 @@ card_reset:
 	while (!status()) {
 		step();
 		LED0_TGGL;
-//		USARTWriteChar('.');
-//		USARTReadChar(); //step-by-step
-//		msg(0,"CC=%08lX\r\n",get_cycles(0));
 	}
 #ifdef AVR_DBG
 	USARTWriteString("End of main loop.\n");

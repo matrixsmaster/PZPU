@@ -18,9 +18,6 @@
 //UART channel speed
 #define UART_BAUDRATE 9600
 
-//UART channel line ending
-//#define UART_LEND "\r\n"
-
 //Enable time measurement
 #define AVR_TIME 1
 
