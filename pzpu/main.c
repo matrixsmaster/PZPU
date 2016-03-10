@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "pzpu.h"
 #include "ram.h"
+#include "pfmt.h"
 
 #define MYSIZE 0x00200000
 #define BREAKA 0
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
 		step();
 #if BREAKA > 0
 		if (++n >= BREAKA) {
-			printf("%u cycles passed, press Enter to continue...\n",n);
+			printf(""PFMT_32UINT" cycles passed, press Enter to continue...\n",n);
 			getchar();
 			n = 0;
 		}
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
 
 	ram_release();
 
-	printf("Simulation cycles counter = 0x%08X%08X\n",get_cycles(1),get_cycles(0));
+	printf("Simulation cycles counter = 0x"PFMT_32XINT PFMT_32XINT"\n",get_cycles(1),get_cycles(0));
 
 	return 0;
 }

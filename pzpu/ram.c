@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ram.h"
+#include "pfmt.h"
 
 //#define EMBED_AVR 1
 
@@ -52,7 +53,7 @@ int ram_init(uint32_t sz)
 	ramsize = sz;
 
 #ifdef RAM_DBG
-	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
+	msg(0,"RAM of "PFMT_32UINT" bytes successfully initialized.\n",sz);
 #endif
 
 	return 0;
@@ -74,46 +75,63 @@ void ram_release()
 uint8_t ram_rd_b(uint32_t adr)
 {
 	uint8_t r = 0;
-	if (adr >= ramsize) return 0;
+	if (adr >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [RD B] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
+		return 0;
+	}
 	if (sd_raw_read(img_offset+adr,&r,1))
 		return r;
-	else
-		return 0;
+
+#ifdef RAM_DBG
+	msg(1,"Unable to read [B] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
+	return 0;
 }
 
 void ram_wr_b(uint32_t adr, uint8_t val)
 {
-	if (adr >= ramsize) return;
+	if (adr >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [WR B] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
+		return;
+	}
 	sd_raw_read(img_offset+adr,&val,1);
 }
 
 uint32_t ram_rd_dw(uint32_t adr)
 {
 	uint32_t r = 0;
-	if (adr >= ramsize-3) return 0;
-//	r  = ram_rd_b(adr++); r <<= 8;
-//	r |= ram_rd_b(adr++); r <<= 8;
-//	r |= ram_rd_b(adr++); r <<= 8;
-//	r |= ram_rd_b(adr);
-//	return r;
-	if (sd_raw_read(img_offset+adr,(uint8_t*)&r,4))
-		return r;
-	else
+	if (adr >= ramsize-3) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [RD DW] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
 		return 0;
+	}
+	if (sd_raw_read(img_offset+adr,(uint8_t*)&r,4))
+		return swap(r);
+
+#ifdef RAM_DBG
+	msg(1,"Unable to read [DW] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
+	return 0;
 }
 
 void ram_wr_dw(uint32_t adr, uint32_t val)
 {
-	if (adr >= ramsize-3) return;
-//	adr += 3;
-//	ram_wr_b(adr--,val);
-//	ram_wr_b(adr--,val >>= 8);
-//	ram_wr_b(adr--,val >>= 8);
-//	ram_wr_b(adr,val >>  8);
+	if (adr >= ramsize-3) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [WR DW] (adr = 0x"PFMT_32XINT")\n",adr);
+#endif
+		return;
+	}
+	val = swap(val);
 	sd_raw_write(img_offset+adr,(uint8_t*)&val,4);
 }
 
-#else
+#else /* HOST = PC (x86) */
 
 int ram_init(uint32_t sz)
 {
@@ -124,7 +142,7 @@ int ram_init(uint32_t sz)
 	memset(RAM,0,sz);
 
 #ifdef RAM_DBG
-	msg(0,"RAM of %u bytes successfully initialized.\n",sz);
+	msg(0,"RAM of "PFMT_32UINT" bytes successfully initialized.\n",sz);
 #endif
 
 	return 0;
@@ -153,7 +171,7 @@ int ram_load(const char* fn, uint32_t maxsz)
 	sz = ftell(f);
 	if (sz >= maxsz) {
 #ifdef RAM_DBG
-		msg(1,"File too large (%lu bytes), RAM size is only %u bytes.\n",sz,maxsz);
+		msg(1,"File too large (%lu bytes), RAM size is only "PFMT_32UINT" bytes.\n",sz,maxsz);
 #endif
 		fclose(f);
 		return 1;

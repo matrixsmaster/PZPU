@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Enable debug output
-#define PZPU_IODBG 1
+//#define PZPU_IODBG 1
 
 //Enable interactive mode for UART
 //#define PZPU_IOINTERACT 1

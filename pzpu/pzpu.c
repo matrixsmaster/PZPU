@@ -6,6 +6,7 @@
 #include "pzpu.h"
 #include "ram.h"
 #include "io.h"
+#include "pfmt.h"
 
 static uint8_t idim,dtpc,halt = 1;
 static uint32_t sp,pc,ram,cycle[2];
@@ -14,10 +15,9 @@ static uint32_t sp,pc,ram,cycle[2];
 
 #include "debug.h"
 
-#define KLUUDGEE 1
-//FIXME: temporary KLUDGE !!!!!!111oneoneone
-#ifndef KLUUDGEE
-static unsigned long long ino = 0; //internal instruction number (for trace generation only)
+#if PZPU_DBG >= 3
+
+static unsigned long long ino = 0; //internal instruction number (for extended trace generation only)
 
 void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
@@ -30,14 +30,16 @@ void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 				ino++,pc,sp,ram_rd_dw(sp),code,mnemonics[code]);
 	}
 }
-#else
+
+#else /* PZPU_DBG lvl */
 
 void trace(uint8_t code, uint8_t ilong, uint8_t arg)
 {
-	msg(0,"PC:0x%08lX SP:0x%08lX I:0x%02X [%hu]\r\n",pc,sp,code,arg);
+	if ((code > 0x0f) && (!ilong)) return;
+	msg(0,"PC:0x"PFMT_32XINT" SP:0x"PFMT_32XINT" [0x"PFMT_32XINT"] I:0x%02X [%hu]\n",pc,sp,ram_rd_dw(sp),code,arg);
 }
-#endif //kludge
 
+#endif /* PZPU_DBG lvl */
 #endif /* PZPU_DBG */
 
 void reset(uint32_t ramsize)
@@ -118,7 +120,7 @@ inline static void im(uint8_t x)
 		}
 		push(v | x);
 	}
-#if PZPU_DBG >= 3
+#if PZPU_DBG >= 4
 	msg(0,"IM: IDIM = %i X = 0x%02X  Result = 0x%08X\n",idim,x,(v|x));
 #endif
 	idim = 1;

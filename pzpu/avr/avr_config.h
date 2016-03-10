@@ -19,7 +19,10 @@
 #define UART_BAUDRATE 9600
 
 //UART channel line ending
-#define UART_LEND "\r\n"
+//#define UART_LEND "\r\n"
+
+//Enable time measurement
+#define AVR_TIME 1
 
 //LED0 config (PB0)
 #define LED0_ON { DDRB |= 1; PORTB |= 1; }

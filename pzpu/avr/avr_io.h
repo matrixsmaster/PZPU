@@ -16,6 +16,8 @@ char USARTReadIsReady(void);
 void USARTWriteChar(const char data);
 void USARTWriteString(const char* str);
 
+uint32_t swap(uint32_t x);
+
 extern uint32_t img_offset;
 
 #endif /* AVR_IO_H_ */

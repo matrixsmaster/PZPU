@@ -3,6 +3,7 @@
  * GPL v2
  */
 
+#include <string.h>
 #include "avr_io.h"
 
 void USARTInit(const uint16_t baud)
@@ -36,4 +37,19 @@ void USARTWriteString(const char* str)
     unsigned int i = 0;
     while (str[i] != '\0')
         USARTWriteChar(str[i++]);
+}
+
+inline uint32_t swap(uint32_t x)
+{
+	//FIXME: need more speedy solution
+    uint8_t a[4],temp;
+    memcpy (a,&x,4);
+    temp = a[0];
+    a[0] = a[3];
+    a[3] = temp;
+    temp = a[1];
+    a[1] = a[2];
+    a[2] = temp;
+    memcpy (&x,a,4);
+    return x;
 }
