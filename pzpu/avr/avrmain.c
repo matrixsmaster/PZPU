@@ -45,6 +45,11 @@ int main(void)
 	//Init serial interface (for terminal functions)
 	USARTInit(UART_BAUDRATE);
 
+	//Init LCD display
+#if LCD_SIZEW && LCD_SIZEH
+	LCDInit();
+#endif
+
 	//Enable interrupts
 	sei();
 

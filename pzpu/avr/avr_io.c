@@ -5,6 +5,9 @@
 
 #include <string.h>
 #include "avr_io.h"
+#include "lcd-library.h"
+
+static uint8_t lcd_px,lcd_py;
 
 void USARTInit(const uint16_t baud)
 {
@@ -37,6 +40,27 @@ void USARTWriteString(const char* str)
     unsigned int i = 0;
     while (str[i] != '\0')
         USARTWriteChar(str[i++]);
+}
+
+void LCDInit(void)
+{
+	lcdInit();
+	lcdClear();
+	lcdSetCursor(LCD_CURSOR_BLINK);
+	lcd_px = lcd_py = 0;
+}
+
+void LCDWriteChar(const char data)
+{
+	if (++lcd_px > LCD_SIZEW) {
+		lcd_px = 0;
+		if (++lcd_py > LCD_SIZEH) {
+			lcd_py = 0;
+		}
+		lcdGotoXY(lcd_py,lcd_px);
+	}
+	while (lcdIsBusy()) ;
+	lcdRawSendByte(data,LCD_DATA);
 }
 
 inline uint32_t swap(uint32_t x)

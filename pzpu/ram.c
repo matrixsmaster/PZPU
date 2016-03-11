@@ -8,7 +8,6 @@
 #include "ram.h"
 #include "pfmt.h"
 
-//#define EMBED_AVR 1
 
 #if RAM_OS_ENABLED
 #include <stdio.h>

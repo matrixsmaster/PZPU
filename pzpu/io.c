@@ -15,6 +15,7 @@ static uint32_t sampled_cycles[2];
 
 #ifdef EMBED_AVR
 #include "avr/avr_io.h"
+#include "avr/avr_config.h"
 #endif
 
 #ifdef PZPU_IODBG
@@ -44,8 +45,12 @@ void io_wr(uint32_t adr, uint32_t be)
 #if PZPU_IOINTERACT
 		putchar(be & 0xFF);
 #elif EMBED_AVR
+#if LCD_SIZEW && LCD_SIZEH
+		LCDWriteChar(be & 0xFF);
+#else
 		USARTWriteChar(be & 0xFF);
-#endif
+#endif /* LCD */
+#endif /* output selector */
 		break;
 
 	case BZPU_CntL:

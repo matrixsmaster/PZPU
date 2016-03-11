@@ -26,4 +26,8 @@
 #define LED0_OFF { DDRB |= 1; PORTB &= ~1; }
 #define LED0_TGGL PORTB ^= 1
 
+//LCD module size (WxH) Set to zero to disable LCD output
+#define LCD_SIZEW 12
+#define LCD_SIZEH 2
+
 #endif /* AVR_CONFIG_H_ */
