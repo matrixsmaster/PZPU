@@ -8,6 +8,7 @@
 #include "ram.h"
 #include "pfmt.h"
 
+//#define EMBED_AVR 1
 
 #if RAM_OS_ENABLED
 #include <stdio.h>
@@ -25,6 +26,8 @@ static uint8_t* RAM = NULL;
 #endif
 
 static uint32_t ramsize = 0;
+
+/************************** CACHING FUNCTIONS **************************/
 
 #if RAM_ICACHE
 static uint32_t icache_base = 0;
@@ -120,7 +123,9 @@ static void ram_scache_init(uint32_t sp)
 }
 #endif /* SCACHE */
 
-#if EMBED_AVR
+/************************** HOST-SPECIFIC **************************/
+
+#if EMBED_AVR /* HOST = 8-bit AVR MCU */
 
 int ram_init(uint32_t sz)
 {
@@ -142,6 +147,9 @@ int ram_init(uint32_t sz)
 #if RAM_ICACHE
 	ram_icache_init();
 #endif
+#if RAM_SCACHE
+	ram_scache_init(sz-4);
+#endif
 
 	return 0;
 }
@@ -150,6 +158,13 @@ void ram_release()
 {
 #ifdef RAM_DBG
 	msg(0,"Releasing RAM... ");
+#endif
+
+#if RAM_ICACHE
+//	ram_icache_sync();
+#endif
+#if RAM_SCACHE
+	ram_scache_sync();
 #endif
 
 	sd_raw_sync();
@@ -196,6 +211,9 @@ void ram_wr_b(uint32_t adr, uint8_t val)
 
 uint32_t ram_rd_dw(uint32_t adr)
 {
+#if RAM_SCACHE
+	return swap(ram_scache_r(adr));
+#else
 	uint32_t r = 0;
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
@@ -210,10 +228,14 @@ uint32_t ram_rd_dw(uint32_t adr)
 	msg(1,"Unable to read [DW] (adr = 0x"PFMT_32XINT")\n",adr);
 #endif
 	return 0;
+#endif /* SCACHE */
 }
 
 void ram_wr_dw(uint32_t adr, uint32_t val)
 {
+#if RAM_SCACHE
+	ram_scache_w(adr,swap(val));
+#else
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
 		msg(1,"Reached out of memory [WR DW] (adr = 0x"PFMT_32XINT")\n",adr);
@@ -222,6 +244,47 @@ void ram_wr_dw(uint32_t adr, uint32_t val)
 	}
 	val = swap(val);
 	sd_raw_write(img_offset+adr,(uint8_t*)&val,4);
+#endif /* SCACHE */
+}
+
+uint8_t ram_rd_seq(uint32_t start, uint8_t len, uint8_t* buf)
+{
+	if (start >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [RD SQ] (0x"PFMT_32XINT")\n",start);
+#endif
+		return 0;
+	}
+	if (start + len >= ramsize)
+		len = ramsize - start;
+
+	if (sd_raw_read(img_offset+start,buf,len)) return len;
+	else {
+#ifdef RAM_DBG
+		msg(1,"Unable to read "PFMT_8UINT" bytes from 0x"PFMT_32XINT"\n",len,start);
+#endif
+		return 0;
+	}
+}
+
+uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf)
+{
+	if (start >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [WR SQ] (0x"PFMT_32XINT")\n",start);
+#endif
+		return 0;
+	}
+	if (start + len >= ramsize)
+		len = ramsize - start;
+
+	if (sd_raw_write(img_offset+start,buf,len)) return len;
+	else {
+#ifdef RAM_DBG
+		msg(1,"Unable to write "PFMT_8UINT" bytes to 0x"PFMT_32XINT"\n",len,start);
+#endif
+		return 0;
+	}
 }
 
 #else /* HOST = PC (x86) */
