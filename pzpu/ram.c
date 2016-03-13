@@ -120,6 +120,9 @@ static void ram_scache_init(uint32_t sp)
 	//just read without sync
 	scache_vlen = 0;
 	ram_scache_r(sp);
+#ifdef RAM_DBG
+	msg(0,"SCache of "PFMT_16UINT" bytes successfully initialized.\n",RAM_SCACHE*4);
+#endif
 }
 #endif /* SCACHE */
 
