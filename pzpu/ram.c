@@ -26,33 +26,70 @@ static uint8_t* RAM = NULL;
 
 static uint32_t ramsize = 0;
 
+#if RAM_ICACHE
+static uint32_t icache_base = 0;
+static uint8_t icache_data[RAM_ICACHE];
+static uint8_t icache_vlen = 0;
+
+static void ram_icache_init()
+{
+	icache_base = 0;
+	icache_vlen = ram_rd_seq(0,RAM_ICACHE,icache_data);
+	if (icache_vlen == RAM_ICACHE) {
+#ifdef RAM_DBG
+		msg(0,"ICache of "PFMT_8UINT" bytes successfully initialized.\n",icache_vlen);
+#endif
+	}
+}
+
+/*
+inline static void ram_icache_sync()
+{
+	if (icache_vlen)
+		ram_wr_seq(icache_base,icache_vlen,icache_data);
+}
+*/
+
+inline static uint8_t ram_icache(uint32_t adr)
+{
+//	msg(0,"B %u L %hhu A %u\n",icache_base,icache_vlen,adr);
+	if ((adr < icache_base) || (adr >= icache_base + icache_vlen)) {
+		//ram_icache_sync();
+		icache_base = adr;
+		icache_vlen = ram_rd_seq(adr,RAM_ICACHE,icache_data);
+
+		if (!icache_vlen) return 0;
+//		msg(0,"IC 0x"PFMT_32XINT" new (vlen = "PFMT_8UINT")\n",adr,icache_vlen);
+		return icache_data[0];
+	}
+//	msg(0,"IC 0x"PFMT_32XINT" hit (off = "PFMT_32UINT")\n",adr,adr-icache_base);
+	return icache_data[adr-icache_base];
+}
+#endif /* ICACHE */
+
+#if RAM_SCACHE
+#endif /* SCACHE */
+
 #if EMBED_AVR
 
 int ram_init(uint32_t sz)
 {
-	uint32_t smpl = 0xABCDEF01;
+	uint32_t smpl;
 
-	//sample first and last locations (FIXME: brokes out the code)
-//	if (!sd_raw_write(img_offset,(uint8_t*)&smpl,4))
-//		return 1;
-//
-//	if (!sd_raw_write(img_offset+sz-1,(uint8_t*)&smpl,4))
-//		return 2;
-
+	//sample first and last locations
 	if (!sd_raw_read(img_offset,(uint8_t*)&smpl,4))
-		return 3;
-//	if (smpl != 0xABCDEF01)
-//		return 4;
+		return 1;
 
 	if (!sd_raw_read(img_offset+sz-1,(uint8_t*)&smpl,4))
-		return 5;
-//	if (smpl != 0xABCDEF01)
-//		return 6;
+		return 2;
 
 	ramsize = sz;
 
 #ifdef RAM_DBG
 	msg(0,"RAM of "PFMT_32UINT" bytes successfully initialized.\n",sz);
+#endif
+
+#if RAM_ICACHE
 #endif
 
 	return 0;
@@ -144,6 +181,13 @@ int ram_init(uint32_t sz)
 	msg(0,"RAM of "PFMT_32UINT" bytes successfully initialized.\n",sz);
 #endif
 
+#if RAM_ICACHE
+	ram_icache_init();
+#endif
+
+#if RAM_SCACHE
+#endif
+
 	return 0;
 }
 
@@ -153,6 +197,10 @@ void ram_release()
 	free(RAM);
 	ramsize = 0;
 	RAM = NULL;
+
+#if RAM_ICACHE
+	//ram_icache_sync();
+#endif
 
 #ifdef RAM_DBG
 	msg(0,"RAM released.\n");
@@ -190,6 +238,12 @@ int ram_load(const char* fn, uint32_t maxsz)
 #endif
 
 	fclose(f);
+
+	//Do cache initializers again
+#if RAM_ICACHE
+	ram_icache_init();
+#endif
+
 	return 0;
 }
 #endif /* RAM_OS_ENABLED */
@@ -198,7 +252,7 @@ void ram_wr_dw(uint32_t adr, uint32_t val)
 {
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
-		msg(1,"Reached out of memory [WR DW] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [WR DW] (adr = 0x"PFMT_32XINT")\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -217,7 +271,7 @@ uint32_t ram_rd_dw(uint32_t adr)
 	uint32_t r = 0;
 	if (adr >= ramsize-3) {
 #ifdef RAM_DBG
-		msg(1,"Reached out of memory [RD DW] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [RD DW] (adr = 0x"PFMT_32XINT")\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -231,11 +285,12 @@ uint32_t ram_rd_dw(uint32_t adr)
 	return r;
 }
 
+/*
 void ram_wr_b(uint32_t adr, uint8_t val)
 {
 	if (adr >= ramsize) {
 #ifdef RAM_DBG
-		msg(1,"Reached out of memory [WR B] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [WR B] (adr = 0x"PFMT_32XINT")\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -244,12 +299,16 @@ void ram_wr_b(uint32_t adr, uint8_t val)
 	}
 	RAM[adr] = val;
 }
+*/
 
 uint8_t ram_rd_b(uint32_t adr)
 {
+#if RAM_ICACHE
+	return ram_icache(adr);
+#else
 	if (adr >= ramsize) {
 #ifdef RAM_DBG
-		msg(1,"Reached out of memory [RD B] (adr = 0x%08X)\n",adr);
+		msg(1,"Reached out of memory [RD B] (adr = 0x"PFMT_32XINT")\n",adr);
 #endif
 #ifdef RAM_OUT_ABORT
 		abort();
@@ -257,6 +316,43 @@ uint8_t ram_rd_b(uint32_t adr)
 		return 0;
 	}
 	return RAM[adr];
+#endif /* ICACHE */
+}
+
+uint8_t ram_rd_seq(uint32_t start, uint8_t len, uint8_t* buf)
+{
+	if (start >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [RD SQ] (0x"PFMT_32XINT")\n",start);
+#endif
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
+		return 0;
+	}
+	if (start + len >= ramsize)
+		len = ramsize - start;
+
+	memcpy(buf,RAM+start,len);
+	return len;
+}
+
+uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf)
+{
+	if (start >= ramsize) {
+#ifdef RAM_DBG
+		msg(1,"Reached out of memory [WR SQ] (0x"PFMT_32XINT")\n",start);
+#endif
+#ifdef RAM_OUT_ABORT
+		abort();
+#endif
+		return 0;
+	}
+	if (start + len >= ramsize)
+		len = ramsize - start;
+
+	memcpy(RAM+start,buf,len);
+	return len;
 }
 
 #endif /* Main implementation switch */

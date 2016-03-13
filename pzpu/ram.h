@@ -15,7 +15,13 @@
 //#define RAM_OS_ENABLED 1
 
 //Abort on boundary tresspassing
-//#define RAM_OUT_ABORT 1
+#define RAM_OUT_ABORT 1
+
+//Use instruction cache
+#define RAM_ICACHE 32
+
+//Use stack cache
+#define RAM_SCACHE 15
 
 //Prototypes
 
@@ -29,5 +35,8 @@ void ram_wr_b(uint32_t adr, uint8_t val);
 
 uint32_t ram_rd_dw(uint32_t adr);
 uint8_t ram_rd_b(uint32_t adr);
+
+uint8_t ram_rd_seq(uint32_t start, uint8_t len, uint8_t* buf);
+uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf);
 
 #endif /* RAM_H_ */

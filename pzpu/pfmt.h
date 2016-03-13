@@ -10,6 +10,7 @@
 
 #define PFMT_32XINT "%08lX"
 
+#define PFMT_8UINT "%hu"
 #define PFMT_16UINT "%u"
 #define PFMT_32UINT "%lu"
 #define PFMT_64UINT "%llu"
@@ -18,6 +19,7 @@
 
 #define PFMT_32XINT "%08X"
 
+#define PFMT_8UINT "%hhu"
 #define PFMT_16UINT "%hu"
 #define PFMT_32UINT "%u"
 #define PFMT_64UINT "%lu"
