@@ -8,7 +8,6 @@
 #include "ram.h"
 #include "pfmt.h"
 
-//#define EMBED_AVR 1
 
 #if RAM_OS_ENABLED
 #include <stdio.h>
@@ -394,11 +393,6 @@ void ram_wr_dw(uint32_t adr, uint32_t val)
 		return;
 	}
 	//big endian:
-	/*adr += 3;
-	RAM[adr--] = val & 0xff;
-	RAM[adr--] = (val >>= 8) & 0xff;
-	RAM[adr--] = (val >>= 8) & 0xff;
-	RAM[adr]   = (val >>  8);*/
 	val = __bswap_32(val);
 	memcpy(RAM+adr,&val,4);
 #endif /* SCACHE */
@@ -420,11 +414,6 @@ uint32_t ram_rd_dw(uint32_t adr)
 		return r;
 	}
 	//big endian:
-	/*r  = RAM[adr++]; r <<= 8;
-	r |= RAM[adr++]; r <<= 8;
-	r |= RAM[adr++]; r <<= 8;
-	r |= RAM[adr];
-	return r;*/
 	memcpy(&r,RAM+adr,4);
 	return __bswap_32(r);
 #endif /* SCACHE */

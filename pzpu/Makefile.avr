@@ -19,6 +19,7 @@ $(APP).hex: $(APP).elf
 
 $(APP).elf: $(OBJS)
 	$(CC) $(LDFLAGS) -o $(APP).elf $(OBJS)
+	avr-size -A $(APP).elf
 
 %.o: %.c
 	$(CC) $(CCFLAGS) -c $< -o $@

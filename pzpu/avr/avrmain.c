@@ -25,7 +25,17 @@ ISR(TIMER1_COMPA_vect)
 	chip_time++;
 //	LED0_TGGL;
 }
-#endif
+#endif /* AVR_TIME */
+
+#ifdef AVR_DBG
+static int freeRam()
+{
+	//From http://jeelabs.org/2011/05/22/atmega-memory-use/
+	extern int __heap_start, *__brkval;
+	int v;
+	return (int)&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+#endif /* AVR_DBG */
 
 int main(void)
 {
@@ -142,6 +152,7 @@ card_reset:
 #endif
 
 #ifdef AVR_DBG
+	msg(0,"Free RAM: %d bytes\n",freeRam());
 	USARTWriteString("Emulator halted.\n");
 #endif
 

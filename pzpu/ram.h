@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Debug output enable
-#define RAM_DBG 1
+//#define RAM_DBG 1
 
 //Enable OS functions (file I/O)
 //#define RAM_OS_ENABLED 1
