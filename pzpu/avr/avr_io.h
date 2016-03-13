@@ -10,7 +10,7 @@
 #include "avr_config.h"
 #include <avr/io.h>
 
-void USARTInit(const uint16_t baud);
+void USARTInit(const uint32_t baud);
 char USARTReadChar(void);
 char USARTReadIsReady(void);
 void USARTWriteChar(const char data);

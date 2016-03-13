@@ -16,7 +16,7 @@
 #define F_CPU 20000000
 
 //UART channel speed
-#define UART_BAUDRATE 9600
+#define UART_BAUDRATE 57600
 
 //Enable time measurement
 #define AVR_TIME 1

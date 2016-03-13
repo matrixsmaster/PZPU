@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include "sd_raw.h"
 #include "avr_io.h"
 #include "../pfmt.h"
@@ -128,10 +129,6 @@ card_reset:
 	cli(); //we don't need interrupts anymore
 	LED0_OFF;
 
-#ifdef AVR_DBG
-	USARTWriteString("Emulator halted.\n");
-#endif
-
 #ifdef AVR_TIME
 	msg(0,"Time passed = "PFMT_32UINT" 2xSec\n",chip_time);
 	if (chip_time) {
@@ -144,6 +141,11 @@ card_reset:
 	}
 #endif
 
-	//Infinite loop
-	for (;;) ; //TODO: put CPU into sleep mode
+#ifdef AVR_DBG
+	USARTWriteString("Emulator halted.\n");
+#endif
+
+	//Infinite sleep (until hard reset)
+	sleep_enable();
+	sleep_cpu();
 }

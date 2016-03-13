@@ -9,7 +9,7 @@
 
 static uint8_t lcd_px,lcd_py;
 
-void USARTInit(const uint16_t baud)
+void USARTInit(const uint32_t baud)
 {
 	uint16_t val = ((uint32_t)F_CPU / baud / 16) - 1;
     UBRR0L = val & 0xff;
