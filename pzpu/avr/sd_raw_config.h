@@ -68,6 +68,21 @@ extern "C"
 #define SD_RAW_SDHC 1
 
 /**
+ * \ingroup sd_raw_config
+ * Controls support for card slot provided information.
+ *
+ */
+#define SD_RAW_LOCKS 0
+
+/**
+ * \ingroup sd_raw_config
+ * Controls SPI interface maximum speed.
+ *
+ * Set to 1 to enable double speed (F_CPU/2).
+ */
+#define SD_RAW_SPI_DOUBLE 0
+
+/**
  * @}
  */
 
@@ -110,9 +125,8 @@ extern "C"
     #error "no sd/mmc pin mapping available!"
 #endif
 
-//#define USE_RAW_LOCKS 1
 
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
 #define configure_pin_available() DDRC &= ~(1 << DDC4)
 #define configure_pin_locked() DDRC &= ~(1 << DDC5)
 #define get_pin_available() (PINC & (1 << PINC4))

@@ -44,13 +44,15 @@ int main(void)
 	chip_time = 0;
 	TIMSK1 = (1<<OCIE1A);
 	TCCR1A = 0;
+	TCCR1B = (1<<WGM12)|(1<<CS12)|(1<<CS10); //Clk / 1024
 
-#if (F_CPU==20000000)
-	TCCR1B = (1<<WGM12)|(1<<CS12)|(1<<CS10);
-	OCR1A = 9765U; //2Hz
-#else
+#define VAL_OCR_TMP ((F_CPU / 1024U) / 2)
+#if (VAL_OCR_TMP < 4) || (VAL_OCR_TMP >= 65535)
 #error "Please correct the timer values for different CPU speed!"
+#else
+	OCR1A = VAL_OCR_TMP;
 #endif /* speed check */
+#undef VAL_OCR_TMP
 #endif /* AVR_TIME */
 
 	//Init serial interface (for terminal functions)

@@ -171,7 +171,7 @@ static uint8_t sd_raw_send_command(uint8_t command, uint32_t arg);
  */
 uint8_t sd_raw_init()
 {
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
     /* enable inputs for reading card status */
     configure_pin_available();
     configure_pin_locked();
@@ -199,7 +199,7 @@ uint8_t sd_raw_init()
     /* initialization procedure */
     sd_raw_card_type = 0;
     
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
     if(!sd_raw_available())
         return 0;
 #endif
@@ -319,7 +319,9 @@ uint8_t sd_raw_init()
 
     /* switch to highest SPI frequency possible */
     SPCR &= ~((1 << SPR1) | (1 << SPR0)); /* Clock Frequency: f_OSC / 4 */
+#if SD_RAW_SPI_DOUBLE
     SPSR |= (1 << SPI2X); /* Doubled Clock Frequency: f_OSC / 2 */
+#endif
 
 #if !SD_RAW_SAVE_RAM
     /* the first block is likely to be accessed first, so precache it here */
@@ -342,7 +344,7 @@ uint8_t sd_raw_init()
  */
 uint8_t sd_raw_available()
 {
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
     return get_pin_available() == 0x00;
 #else
 	return 1;
@@ -357,7 +359,7 @@ uint8_t sd_raw_available()
  */
 uint8_t sd_raw_locked()
 {
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
     return get_pin_locked() == 0x00;
 #else
 	return 0;
@@ -677,7 +679,7 @@ uint8_t sd_raw_read_interval(offset_t offset, uint8_t* buffer, uintptr_t interva
  */
 uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
 {
-#ifdef USE_RAW_LOCKS
+#if SD_RAW_LOCKS
     if(sd_raw_locked())
         return 0;
 #endif
