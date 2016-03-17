@@ -1,0 +1,4 @@
+This particular board was created using old KiCad (2013) with many deeply fragmentated libraries. So I'll release only schematics and PCBs, without cmp or pro files, but with libraries necessary to correctly render the schematics. You can just open sch file in eeschema, connect lib files and see the final product.
+Since pcbnew embedding footprints into pcb file, there's no need for any additional mod files.
+
+Next projects will be complete thanks to github-enhanced CvPcb in a new KiCad 4.
