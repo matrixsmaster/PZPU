@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 		off = atoi(argv[5]);
 		if (!off) {
 			//zero offset means random offset generation
-			off = ceil((float)rand() / (float)RAND_MAX * (float)(card - sz - 512*2 - 1)) + 512;
+			off = ceil((float)rand() / (float)RAND_MAX * (float)(card - vmram - 512*2 - 1)) + 512;
 			//align it to nearest sector
 			off /= 512;
 			off *= 512;
