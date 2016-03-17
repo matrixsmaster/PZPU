@@ -1,0 +1,9 @@
+TODO: write this readme
+
+Invoking example:
+./pzpu-imgcrt 4 2 ../testzpu/Debug/testzpu.bin test.raw 1024 255
+Will create SD image file 'test.raw' for 4GB SD card, with the following params:
+2 MiB virtual RAM, preloaded with compiled program 'testzpu.bin'
+RAM start sector is 2 (1024 byte offset)
+Unused RAM will be initialized with 0xFF (255)
+

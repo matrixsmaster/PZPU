@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
 	//chack args
 	if (argc < 5) {
-		printf("Usage: %s <card_size(GB)> <VM_RAM_size(MiB)> <program.bin> <output> [offset]\n",argv[0]);
+		printf("Usage: %s <card_size(GB)> <VM_RAM_size(MiB)> <program.bin> <output> [offset] [fill_byte]\n",argv[0]);
 		return 0;
 	}
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	//get VM RAM size
 	unsigned vmram = atoi(argv[2]);
 	vmram *= 1024 * 1024; //binary-based
-	printf("VM RAM size is %u bytes\n",vmram);
+	printf("VM RAM size is 0x%X (%u) bytes\n",vmram,vmram);
 
 	//open input file
 	FILE* f = fopen(argv[3],"rb");
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 		return 10;
 	}
 
-	printf("BIN file size = 0x%lX\n",sz);
+	printf("BIN file size = 0x%lX (%lu) bytes\n",sz,sz);
 
 	//allocate buffer
 	char* bin = malloc(sz);
@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
 		return 3;
 	}
 
-	//generate offset or used provided one
+	//generate offset or use provided one
 	unsigned off = 512; //by default, the second sector
-	if (argc == 6) {
+	if (argc >= 6) {
 		off = atoi(argv[5]);
 		if (!off) {
 			//zero offset means random offset generation
@@ -97,30 +97,47 @@ int main(int argc, char* argv[])
 	hd.off = off;
 	hd.len = vmram;
 	char obuf[512]; //1 sector
-	unsigned i,j;
+	unsigned i,j,n;
+	int fill = -1; //don't fill by default
+	if (argc >= 7) fill = atoi(argv[6]);
 
 	//start writing
 	printf("Writing... ");
-	for (i = 0, j = 0; (i < card) && (j < sz); i+=512) {
+	fflush(stdout);
+	for (i = 0, j = 0, n = 0; i < card; i += 512, n++) {
 		memset(obuf,0,512);
+		//FIXME: unaligned access isn't possible so far!
 
 		if (i == 0) {
 			//write header
 			memcpy(obuf,&hd,sizeof(hd));
+
 		} else if (i >= off) {
-			//write data
-			if (j+512 >= sz)
-				memcpy(obuf,bin+j,sz-j);
-			else
-				memcpy(obuf,bin+j,512);
+			if (j < sz) {
+				//write data
+				if (j+512 >= sz)
+					memcpy(obuf,bin+j,sz-j);
+				else
+					memcpy(obuf,bin+j,512);
+
+			} else if ((fill >= 0) && (j < vmram)) {
+				//fill virtual memory area
+				memset(obuf,(char)fill,512);
+
+			} else {
+				//nothing to write anymore
+				break;
+
+			}
 			j += 512;
-		} else {
-			//write void :)
+
+		} else /* between header and data area */ {
+			//write void :) specifically - zeroes
 		}
 
 		fwrite(obuf,512,1,f);
 	}
-	puts("done.");
+	printf("done.\n%u sectors wrote.\n",n);
 
 	//ending
 	fclose(f);
