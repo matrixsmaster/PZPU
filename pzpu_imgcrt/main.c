@@ -50,8 +50,8 @@ int main(int argc, char* argv[])
 	fseek(f,0,SEEK_SET);
 
 	//and check it
-	if (sz + 512 >= card) {
-		printf("Program is too large for this card!\n");
+	if (vmram + 512 >= card) {
+		printf("Project is too large for this card!\n");
 		fclose(f);
 		return 10;
 	}
