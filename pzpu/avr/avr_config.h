@@ -21,10 +21,14 @@
 //Enable time measurement
 #define AVR_TIME 1
 
-//LED0 config (PB0)
-#define LED0_ON { DDRB |= 2; PORTB |= 2; }
-#define LED0_OFF { DDRB |= 2; PORTB &= ~2; }
-#define LED0_TGGL PORTB ^= 2
+//Enable user-initiated start
+#define AVR_WAITFORSTART 1
+
+//LED0 config
+#define LED0			(1<<PB1)
+#define LED0_ON			{ DDRB |= LED0; PORTB |= LED0; }
+#define LED0_OFF		{ DDRB |= LED0; PORTB &= ~LED0; }
+#define LED0_TGGL		PORTB ^= LED0
 
 //LCD module size (WxH) Set to zero to disable LCD output
 #define LCD_SIZEW 12
@@ -54,5 +58,10 @@
 //#define LCD_USE_FLASH_FUNCTIONS
 //#define LCD_USE_EEPROM_FUNCTIONS
 //#define LCD_USE_CUSTOM_CHARACTER_FUNCTIONS
+
+//Buttons config
+#define BUTTON_LEFT		(PINC & (1<<PC5))
+#define BUTTON_RIGHT	(PINC & (1<<PC3))
+#define BUTTON_ENTER	(PINC & (1<<PC4))
 
 #endif /* AVR_CONFIG_H_ */
