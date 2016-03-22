@@ -10,10 +10,10 @@
 #include <avr/sleep.h>
 #include "sd_raw.h"
 #include "avr_io.h"
-#include "../pfmt.h"
-#include "../pzpu.h"
-#include "../ram.h"
-#include "../debug.h"
+#include "pfmt.h"
+#include "pzpu.h"
+#include "ram.h"
+#include "debug.h"
 
 uint32_t img_offset,img_length;
 

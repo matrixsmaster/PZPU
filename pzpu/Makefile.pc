@@ -10,7 +10,7 @@ APP = pzpu
 
 MODE = -DRAM_OS_ENABLED=1 -DPZPU_IOINTERACT=1 -DDEBUG_OS_ENABLED=1
 
-OBJS = debug.o ram.o io.o pzpu.o main.o
+OBJS = debug.o ram.o ram_pc.o io.o io_pc.o pzpu.o main.o
 
 all: $(APP)
 
@@ -22,4 +22,4 @@ $(APP): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(APP)
+	rm -f *.o $(APP)

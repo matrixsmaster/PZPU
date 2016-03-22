@@ -39,4 +39,14 @@ uint8_t ram_rd_b(uint32_t adr);
 uint8_t ram_rd_seq(uint32_t start, uint8_t len, uint8_t* buf);
 uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf);
 
+void ram_icache_init();
+uint8_t ram_icache(uint32_t adr);
+
+void ram_scache_sync();
+uint8_t ram_scache_check(uint32_t adr);
+uint32_t ram_scache_r(uint32_t adr);
+void ram_scache_w(uint32_t adr, uint32_t val);
+void ram_scache_init(uint32_t sp);
+
+
 #endif /* RAM_H_ */

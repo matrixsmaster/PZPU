@@ -7,20 +7,12 @@
 #include "pzpu.h"
 #include "pfmt.h"
 
-static uint32_t sampled_cycles[2];
-
-#ifdef PZPU_IOINTERACT
-#include <stdio.h>
-#endif
-
-#ifdef EMBED_AVR
-#include "avr/avr_io.h"
-#include "avr/avr_config.h"
-#endif
-
 #ifdef PZPU_IODBG
 #include "debug.h"
 #endif
+
+static uint32_t sampled_cycles[2];
+
 
 void io_wr(uint32_t adr, uint32_t be)
 {
@@ -42,15 +34,7 @@ void io_wr(uint32_t adr, uint32_t be)
 	switch (adr) {
 
 	case BZPU_UARTTx:
-#if PZPU_IOINTERACT
-		putchar(be & 0xFF);
-#elif EMBED_AVR
-#if LCD_SIZEW && LCD_SIZEH
-		LCDWriteChar(be & 0xFF);
-#else
-		USARTWriteChar(be & 0xFF);
-#endif /* LCD */
-#endif /* output selector */
+		term_putchar(be);
 		break;
 
 	case BZPU_CntL:
@@ -88,13 +72,7 @@ uint32_t io_rd(uint32_t adr)
 		break;
 
 	case BZPU_UARTRx:
-#if PZPU_IOINTERACT
-		return (0x100 | getchar()); //Receive is valid
-#elif EMBED_AVR
-		return (0x100 | USARTReadChar()); //Receive is valid
-#else
-		return 0; //Receive is invalid
-#endif
+		return term_getchar();
 
 	case BZPU_CntH:
 		return sampled_cycles[1];

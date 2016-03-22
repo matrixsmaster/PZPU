@@ -12,7 +12,7 @@
 //#define PZPU_IODBG 1
 
 //Enable interactive mode for UART
-//#define PZPU_IOINTERACT 1
+#define PZPU_IOINTERACT 1
 
 //Emulated board IO offset
 #define EBOARD_OFFSET 0x080A0000U
@@ -36,7 +36,12 @@ enum EBoardIO {
 	BZPU_MHZ = 0x3C
 };
 
+//Emulator IO function prototypes
 void io_wr(uint32_t adr, uint32_t be);
 uint32_t io_rd(uint32_t adr);
+
+//Host-specific functions (implemented outside io.c module)
+void term_putchar(const uint32_t x);
+uint32_t term_getchar(void);
 
 #endif /* IO_H_ */
