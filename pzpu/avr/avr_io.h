@@ -9,9 +9,6 @@
 #include <inttypes.h>
 #include <avr/io.h>
 
-//FIXME:
-#include "mega/avr_config.h"
-
 void USARTInit(const uint32_t baud);
 char USARTReadChar(void);
 char USARTReadIsReady(void);

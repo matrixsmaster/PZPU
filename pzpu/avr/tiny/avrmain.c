@@ -42,11 +42,9 @@ card_reset:
 	img_offset = 0;
 	img_length = 0;
 
-	LED0_OFF;
 	while (!sd_raw_init()) {
 		_delay_ms(1000);
 	}
-	LED0_ON;
 
 #ifdef AVR_DBG
 	USARTWriteChar('A');
@@ -77,7 +75,7 @@ card_reset:
 #ifdef AVR_DBG
 		USARTWriteChar('E');
 		USARTWriteChar('3');
-		USARTWriteChar(ram_init(img_length));
+		USARTWriteChar(ram_init(img_length)+'0');
 #endif
 		goto card_reset;
 	}
@@ -97,7 +95,6 @@ card_reset:
 #endif
 	while (!status()) {
 		step();
-		LED0_TGGL;
 	}
 #ifdef AVR_DBG
 	USARTWriteChar('E');
@@ -106,7 +103,6 @@ card_reset:
 
 	//End of user program execution
 	ram_release(); //sync and disconnect RAM card
-	LED0_OFF;
 
 #ifdef AVR_DBG
 //	msg(0,"Free RAM: %d bytes\n",freeRam());

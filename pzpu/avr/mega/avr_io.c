@@ -5,16 +5,16 @@
 
 #include <string.h>
 #include "avr_io.h"
-#include "lcd-library.h"
+#include "lcd_library.h"
 
 static uint8_t lcd_px,lcd_py;
 
 void term_putchar(const uint32_t x)
 {
 #if LCD_SIZEW && LCD_SIZEH
-		LCDWriteChar(x & 0xFF);
+	LCDWriteChar(x & 0xFF);
 #else
-		USARTWriteChar(x & 0xFF);
+	USARTWriteChar(x & 0xFF);
 #endif /* LCD */
 }
 

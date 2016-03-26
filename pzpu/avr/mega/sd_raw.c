@@ -10,7 +10,7 @@
 
 #include <string.h>
 #include <avr/io.h>
-#include "../sd_raw.h"
+#include "sd_raw.h"
 
 /**
  * \addtogroup sd_raw MMC/SD/SDHC card raw access

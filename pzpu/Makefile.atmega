@@ -10,7 +10,8 @@ CCFLAGS = -std=c99 -O2 -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/mega -DEMBED_A
 LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
 APP = pzpu_atmega
 
-OBJS = debug.o ram.o avr/mega/ram_atmega.o io.o pzpu.o avr/mega/sd_raw.o avr/avr_io.o avr/mega/lcd_library.o avr/mega/avrmain.o
+OBJS  = debug.o ram.o io.o pzpu.o
+OBJS += avr/mega/ram_atmega.o avr/mega/sd_raw.o avr/mega/avr_io.o avr/mega/lcd_library.o avr/mega/avrmain.o
 
 all: $(APP).hex
 
@@ -26,4 +27,4 @@ $(APP).elf: $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(APP).hex $(APP).elf
+	rm -f *.o avr/*.o avr/mega/*.o $(APP).hex $(APP).elf
