@@ -3,18 +3,7 @@
  * GPL v2
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include "ram.h"
-#include "pfmt.h"
-#include "avr_io.h"
-#include "sd_raw.h"
-
-#ifdef RAM_DBG
-#include "debug.h"
-#endif
-
-extern uint32_t ramsize;
+#include "ram_avr.h"
 
 int ram_init(uint32_t sz)
 {

@@ -6,12 +6,16 @@
 MCU = atmega328p
 
 CC = avr-gcc
-CCFLAGS = -std=c99 -O2 -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/mega -DEMBED_AVR=1
+CCFLAGS = -std=c99 -O2 -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/mega -DEMBED_AVR=1 -DEMBED_AVR_MEGA=1
 LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
 APP = pzpu_atmega
 
-OBJS  = debug.o ram.o io.o pzpu.o
-OBJS += avr/mega/ram_atmega.o avr/mega/sd_raw.o avr/mega/avr_io.o avr/mega/lcd_library.o avr/mega/avrmain.o
+SUBTARGET = avr/mega/
+
+OBJS  = debug.o ram.o io.o pzpu.o avr/ram_avr.o
+OBJSP = sd_raw.o avr_io.o lcd_library.o avrmain.o
+
+OBJS += $(addprefix $(SUBTARGET), $(OBJSP))
 
 all: $(APP).hex
 
