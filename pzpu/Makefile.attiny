@@ -4,16 +4,16 @@
 #
 
 MCU = attiny85
+APP = pzpu_attiny
 
 CC = avr-gcc
 CCFLAGS = -std=c99 -Os -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/tiny -DEMBED_AVR=1 -DEMBED_AVR_TINY=1
-LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
-APP = pzpu_attiny
+LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections -Wl,-Map,$(APP).map
 
 SUBTARGET = avr/tiny/
 
 OBJS  = debug.o ram.o io.o pzpu.o avr/ram_avr.o avr/avr_utils.o
-OBJSP = sd_raw.o avr_io.o lcd.o avrmain.o
+OBJSP = sd_raw.o avr_io.o lcd.o soft_spi.o avrmain.o
 
 OBJS += $(addprefix $(SUBTARGET), $(OBJSP))
 
@@ -31,4 +31,4 @@ $(APP).elf: $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o avr/*.o avr/tiny/*.o $(APP).hex $(APP).elf
+	rm -f *.o avr/*.o avr/tiny/*.o $(APP).hex $(APP).elf $(APP).map

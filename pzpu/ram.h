@@ -18,10 +18,10 @@
 #define RAM_OUT_ABORT 1
 
 //Use instruction cache
-#define RAM_ICACHE 32
+//#define RAM_ICACHE 32
 
 //Use stack cache
-#define RAM_SCACHE 15
+//#define RAM_SCACHE 15
 
 //Prototypes
 

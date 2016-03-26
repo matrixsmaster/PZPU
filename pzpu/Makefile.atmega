@@ -4,11 +4,11 @@
 #
 
 MCU = atmega328p
+APP = pzpu_atmega
 
 CC = avr-gcc
 CCFLAGS = -std=c99 -O2 -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/mega -DEMBED_AVR=1 -DEMBED_AVR_MEGA=1
 LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
-APP = pzpu_atmega
 
 SUBTARGET = avr/mega/
 

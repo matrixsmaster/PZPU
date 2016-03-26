@@ -18,6 +18,15 @@
 //UART channel speed
 #define UART_BAUDRATE 9600
 
+//SPI channel configuration
+#define SPIPORT		PORTB
+#define SPIDDR		DDRB
+#define SPIPIN		PINB
+#define PIN_DI		PB0
+#define PIN_DO		PB1
+#define PIN_SCK		PB2
+#define PIN_SS		PB3
+
 //LCD module size (WxH) Set to zero to disable LCD output
 #define LCD_SIZEW 16
 #define LCD_SIZEH 2
