@@ -3,14 +3,14 @@
 # GPL v2
 #
 
-MCU = atmega328p
+MCU = attiny85p
 
 CC = avr-gcc
-CCFLAGS = -std=c99 -O2 -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/mega -DEMBED_AVR=1
+CCFLAGS = -std=c99 -Os -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/tiny -DEMBED_AVR=1
 LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections
-APP = pzpu_avr
+APP = pzpu_attiny
 
-OBJS = debug.o ram.o avr/mega/ram_atmega.o io.o pzpu.o avr/mega/sd_raw.o avr/avr_io.o avr/mega/lcd-library.o avr/mega/avrmain.o
+#OBJS = debug.o ram.o avr/tiny/ram_atmega.o io.o pzpu.o avr/tiny/sd_raw.o avr/avr_io.o avr/tiny/lcd_library.o avr/tiny/avrmain.o
 
 all: $(APP).hex
 

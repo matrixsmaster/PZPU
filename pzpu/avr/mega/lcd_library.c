@@ -11,7 +11,7 @@
  *
  *
  */ 
-#include "lcd-library.h"
+#include "lcd_library.h"
 
 #ifdef LCD_USE_FLASH_FUNCTIONS
 	#include <avr/pgmspace.h>
@@ -178,10 +178,10 @@ void lcdInit(void)
 
 void lcdInitGraphMode(void)
 /*
-	Инициализация в графическом режиме
+	пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 */
 {
-	//_delay_ms(500); // Если что менять
+	//_delay_ms(500); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
 	while (lcdIsBusy()) ;	
 	lcdSendNibble(0b0010, LCD_COMMAND);
@@ -199,7 +199,7 @@ void lcdInitGraphMode(void)
 
 void lcdSetXYbyte (char Byte, char X, char Y)
 /*
-	Установление байта с координатами Х и Y в графическом режиме
+	пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅ Y пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 */
 {
 	unsigned char AddDDRAM, AddCGRAM;
@@ -217,10 +217,10 @@ void lcdSetXYbyte (char Byte, char X, char Y)
 			}
 
 	while (lcdIsBusy())	;
-	lcdRawSendByte(AddCGRAM, LCD_COMMAND);	//Устанавливаем адрес верхней или нижней строки
+	lcdRawSendByte(AddCGRAM, LCD_COMMAND);	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	 
 	while (lcdIsBusy())	;
-	lcdRawSendByte(AddDDRAM, LCD_COMMAND); //Устанавливаем адрес столбца в верхней или нижней строке
+	lcdRawSendByte(AddDDRAM, LCD_COMMAND); //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
 	while (lcdIsBusy())	;
 	lcdRawSendByte(Byte, LCD_DATA);
@@ -228,7 +228,7 @@ void lcdSetXYbyte (char Byte, char X, char Y)
 
 void lcdClearXYbyte(char Byte, char X, char Y)
 /*
-	Установление бита с координатами Х и Y в графическом режиме
+	пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅ Y пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 */
 {
 	char AddDDRAM, AddCGRAM;

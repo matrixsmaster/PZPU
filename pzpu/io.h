@@ -12,7 +12,7 @@
 //#define PZPU_IODBG 1
 
 //Enable interactive mode for UART
-#define PZPU_IOINTERACT 1
+//#define PZPU_IOINTERACT 1
 
 //Emulated board IO offset
 #define EBOARD_OFFSET 0x080A0000U
