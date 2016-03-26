@@ -3,7 +3,7 @@
 # GPL v2
 #
 
-MCU = attiny85p
+MCU = attiny85
 
 CC = avr-gcc
 CCFLAGS = -std=c99 -Os -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/tiny -DEMBED_AVR=1 -DEMBED_AVR_TINY=1
@@ -12,7 +12,7 @@ APP = pzpu_attiny
 
 SUBTARGET = avr/tiny/
 
-OBJS  = debug.o ram.o io.o pzpu.o avr/ram_avr.o
+OBJS  = debug.o ram.o io.o pzpu.o avr/ram_avr.o avr/avr_utils.o
 OBJSP = sd_raw.o avr_io.o lcd.o avrmain.o
 
 OBJS += $(addprefix $(SUBTARGET), $(OBJSP))

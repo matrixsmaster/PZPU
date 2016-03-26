@@ -18,8 +18,4 @@ void USARTWriteString(const char* str);
 void LCDInit(void);
 void LCDWriteChar(const char data);
 
-uint32_t swap(uint32_t x);
-
-extern uint32_t img_offset;
-
 #endif /* AVR_IO_H_ */

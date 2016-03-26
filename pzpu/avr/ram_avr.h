@@ -8,13 +8,16 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "ram.h"
 #include "pfmt.h"
 #include "avr_io.h"
 
 #if EMBED_AVR_MEGA
+#include "mega/avr_config.h"
 #include "mega/sd_raw.h"
 #elif EMBED_AVR_TINY
+#include "tiny/avr_config.h"
 #include "tiny/sd_raw.h"
 #else
 #error "Unknown AVR port"
@@ -24,6 +27,9 @@
 #include "debug.h"
 #endif
 
+uint32_t swap(uint32_t x);
+
+extern uint32_t img_offset;
 extern uint32_t ramsize;
 
 #endif /* RAM_AVR_H_ */

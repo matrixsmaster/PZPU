@@ -9,20 +9,6 @@
 
 static uint8_t lcd_px,lcd_py;
 
-void term_putchar(const uint32_t x)
-{
-#if LCD_SIZEW && LCD_SIZEH
-	LCDWriteChar(x & 0xFF);
-#else
-	USARTWriteChar(x & 0xFF);
-#endif /* LCD */
-}
-
-uint32_t term_getchar(void)
-{
-	return (0x100 | USARTReadChar()); //Receive is valid
-}
-
 void USARTInit(const uint32_t baud)
 {
 	uint16_t val = ((uint32_t)F_CPU / baud / 16) - 1;
@@ -75,16 +61,4 @@ void LCDWriteChar(const char data)
 	}
 	while (lcdIsBusy()) ;
 	lcdRawSendByte(data,LCD_DATA);
-}
-
-inline uint32_t swap(uint32_t x)
-{
-	uint32_t y = (x & 0xff);
-	y <<= 8; x >>= 8;
-	y |= (x & 0xff);
-	y <<= 8; x >>= 8;
-	y |= (x & 0xff);
-	y <<= 8; x >>= 8;
-	y |= x;
-    return y;
 }
