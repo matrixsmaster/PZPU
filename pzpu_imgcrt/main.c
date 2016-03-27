@@ -16,35 +16,140 @@
 static unsigned card = 4; //4 GB TF card
 static unsigned vmram = 2; //2 MiB virtual RAM
 static unsigned off = 512; //by default, the second sector
+static unsigned blkoff = 0; //no blockwise offset
 static int fill = -1; //don't fill by default
 static int mode = 0; //normal mode
 static const char* fn_in = NULL; //input file
 static const char* fn_out = NULL; //output file
 
 //Helper functions
-void help(const char* prog)
+static void printsettings()
 {
-	printf("Usage: %s <card_size(GB)> <VM_RAM_size(MiB)> <program.bin> <output> [offset] [fill_byte]\n",prog);
+	if (fn_out) printf("Image file:\t%s\n",fn_out);
+	if (fn_in) printf("Binary file:\t%s\n",fn_in);
+	printf("Card size:\t%u GB\n",card);
+	printf("RAM size:\t%u MiB\n",vmram);
+	printf("RAM offset:\t%u bytes (%u sectors)\n",off,off/512);
+	printf("Blockwise off.:\t%u bytes\n",blkoff);
+
+	if (fill >= 0)
+		printf("Filler byte:\t0x%02X\n",fill);
+
+	printf("Image mode: ");
+	switch (mode) {
+	case 0: puts("Normal"); break;
+	case 1: puts("Dotted"); break;
+	default: puts("Invalid"); break;
+	}
 }
 
-int argparse(int argc, char* argv[])
+static void help(const char* prog)
 {
-	return 0;
-	/*if (argc >= 6) {
-		off = atoi(argv[5]);
-		if (!off) {
-			//zero offset means random offset generation
-			off = ceil((float)rand() / (float)RAND_MAX * (float)(card - vmram - 512*2 - 1)) + 512;
-			//align it to nearest sector
-			off /= 512;
-			off *= 512;
+	int i;
+	printf("Usage: %s [<options>], which are:\n",prog);
+	for (i = 0; arg_table[i].desc; i++)
+		printf("\t-%c: %s\n",arg_table[i].sw,arg_table[i].desc);
+	printf("\nDefault settings are:\n");
+	printsettings();
+}
+
+static int argparse(int argc, char* argv[])
+{
+	int i,j;
+	enum EICArgument p = ICA_INVALID;
+
+	for (i = 1; i < argc; i++) {
+		switch (p) {
+		case ICA_INVALID:
+			//awaiting for next switch, check it
+			if ((strlen(argv[i]) != 2) || (argv[i][0] != '-')) {
+				printf("Invalid argument %d ('%s').\n",i,argv[i]);
+				return 0;
+			}
+			//try to resolve switch char
+			for (j = 0; arg_table[j].typ != ICA_INVALID; j++)
+				if (arg_table[j].sw == argv[i][1])
+					p = arg_table[j].typ;
+			//error message
+			if (p == ICA_INVALID) {
+				printf("Unknown switch '%c' at argument %d.\n",argv[i][1],i);
+				return 0;
+			}
+			break;
+
+		case ICA_MODE:
+			mode = atoi(argv[i]);
+			if ((mode < 0) || (mode > 1)) {
+				printf("Invalid mode setting.\n");
+				return 0;
+			}
+			p = ICA_INVALID;
+			break;
+
+		case ICA_IMGFILE:
+			fn_out = argv[i];
+			p = ICA_INVALID;
+			break;
+
+		case ICA_BINFILE:
+			fn_in = argv[i];
+			p = ICA_INVALID;
+			break;
+
+		case ICA_CARDSZ:
+			card = atoi(argv[i]);
+			if ((!card) || (card > 999)) {
+				printf("Invalid card size value.\n");
+				return 0;
+			}
+			p = ICA_INVALID;
+			break;
+
+		case ICA_RAMSZ:
+			vmram = atoi(argv[i]);
+			if (!vmram) {
+				printf("Invalid RAM size value.\n");
+				return 0;
+			}
+			p = ICA_INVALID;
+			break;
+
+		case ICA_OFFSET:
+			off = atoi(argv[i]);
+			if (!off) {
+				//zero offset means random offset generation
+				off = ceil((float)rand() / (float)RAND_MAX * (float)(card - vmram - 512*2 - 1)) + 512;
+				//align it to nearest sector
+				off /= 512;
+				off *= 512;
+			}
+			p = ICA_INVALID;
+			break;
+
+		case ICA_BLKOFF:
+			blkoff = atoi(argv[i]);
+			if (!off) {
+				//zero offset means random offset generation
+				blkoff = ceil((float)rand() / (float)RAND_MAX * (float)(512 - 5));
+				//align it to nearest sector
+				blkoff /= 512;
+				blkoff *= 512;
+			}
+			p = ICA_INVALID;
+			break;
+
+		case ICA_FILLER:
+			fill = atoi(argv[i]) & 255;
+			p = ICA_INVALID;
+			break;
 		}
-	}*/
-	//if (argc >= 7) fill = atoi(argv[6]);
+	}
+
+	return 1;
 }
 
 //The Image creator itself
-void create_normal(FILE* f, const char* bin, size_t len)
+static void create_normal(FILE* f, const char* bin, size_t len)
 {
 	struct SSDHeader hd;
 	hd.off = off;
@@ -86,6 +191,7 @@ void create_normal(FILE* f, const char* bin, size_t len)
 			if ((i < off) && (i + 512 > off)) {
 				//the next sector will contain only a part of data (unaligned access)
 				//TODO
+				abort();
 			}
 			//write something void :) specifically - zeroes
 		}
@@ -97,8 +203,8 @@ void create_normal(FILE* f, const char* bin, size_t len)
 
 //Term "dotted" selected to not to confuse with more applicable, but reserved term "sparsed".
 //The true "sparsed" image will use POSIX OS' filesystems capability of using "holes" in large
-//files to preserve space.
-void create_dotted(FILE* f, const char* bin, size_t len)
+//files to preserve space. And I want to use it later :)
+static void create_dotted(FILE* f, const char* bin, size_t len)
 {
 	//TODO
 }
@@ -109,25 +215,47 @@ int main(int argc, char* argv[])
 	//init RNG
 	srand(time(NULL));
 
-	//read arguments
-	if (!argparse(argc,argv)) {
+	//print banner
+	printf("PZPU SD Image Creator. (C) MatrixS_Master, 2016\n\n");
+
+	//read arguments (min. 2 (in/out))
+	if ((argc < 5) || (!argparse(argc,argv)) || (!fn_in) || (!fn_out)) {
 		help(argv[0]);
 		return 0;
 	}
+	printsettings();
 
 	//calculate SD size
 	card *= 1000000000UL; //not binary, but decimal-based (10^9)
-	printf("Card size is %u bytes\n",card);
+	printf("Card size is 0x%X (%u) bytes\n",card,card);
 
 	//calculate VM RAM size
 	vmram *= 1024 * 1024; //binary-based (2^20)
 	printf("VM RAM size is 0x%X (%u) bytes\n",vmram,vmram);
 
 	//check offset
-	printf("RAM offset is %u, sector %u\n",off,off/512);
-	if (off < 512) {
-		printf("ERROR: The sector Zero is reserved. Image offset can't be less than 512 bytes.\n");
+	if ((mode == 0) && (off < 512)) {
+		puts("ERROR: The sector Zero is reserved. Image offset can't be less than 512 bytes.");
 		return 11;
+	}
+	if (off + vmram + sizeof(struct SSDHeader) >= card) {
+		puts("ERROR: Unable to fit into the card.");
+		if (vmram + sizeof(struct SSDHeader) >= card)
+			puts("Try to use lower offset value.");
+		return 11;
+	}
+
+	//check space requirements for dotted image
+	if (mode == 1) {
+		if (card / 128 <= vmram + sizeof(struct SSDHeader)) {
+			puts("ERROR: Unable to fit into the card.");
+			puts("You must take into consideration, that dotted RAM should be at least 128 times smaller than SD card size.");
+			return 12;
+		}
+		if (card / 128 <= vmram + sizeof(struct SSDHeader) + off) {
+			puts("ERROR: Unable to fit into the card. Offset value is too high. Try to use zero offset.");
+			return 12;
+		}
 	}
 
 	//open input file
