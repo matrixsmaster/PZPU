@@ -18,9 +18,7 @@
 #ifndef LCD_LIBRARY_H_
 #define LCD_LIBRARY_H_
 
-//FIXME:
 #include "mega/avr_config.h"
-
 #include <avr/io.h>
 #include <util/delay.h>
 

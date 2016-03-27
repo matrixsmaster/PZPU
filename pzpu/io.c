@@ -81,7 +81,7 @@ uint32_t io_rd(uint32_t adr)
 		return sampled_cycles[0];
 
 	case BZPU_MHZ:
-		return 1; //FIXME
+		return 1; //FIXME: do measurements and return real value
 
 	default:
 		break;

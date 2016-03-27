@@ -13,9 +13,11 @@
 #include "pfmt.h"
 #include "pzpu.h"
 #include "ram.h"
+#include "lcd.h"
+#include "soft_spi.h"
 #include "debug.h"
 
-uint32_t img_offset,img_length;
+uint32_t img_offset,img_length,img_blk_offset;
 
 #ifdef AVR_DBG
 static int freeRam()
@@ -29,7 +31,8 @@ static int freeRam()
 
 int main(void)
 {
-	//Init serial interface (for terminal functions)
+	//Init serial interfaces
+	spi_init();
 	USARTInit(UART_BAUDRATE);
 
 	//Init LCD display
@@ -41,10 +44,13 @@ int main(void)
 card_reset:
 	img_offset = 0;
 	img_length = 0;
+	img_blk_offset = 0;
 
+	LCD_LEDOFF;
 	while (!sd_raw_init()) {
 		_delay_ms(1000);
 	}
+	LCD_LEDON;
 
 #ifdef AVR_DBG
 	USARTWriteChar('A');
@@ -58,7 +64,6 @@ card_reset:
 #endif
 		goto card_reset;
 	}
-//	msg(0,"Image offset = 0x%08lX\n",img_offset);
 
 	//Read image (memory) size
 	if ((!sd_raw_read(4,(uint8_t*)&img_length,4)) || (!img_length)) {
@@ -68,13 +73,21 @@ card_reset:
 #endif
 		goto card_reset;
 	}
-//	msg(0,"Image length = 0x%08lX\n",img_length);
+
+	//Read blockwise offset
+	if ((!sd_raw_read(8,(uint8_t*)&img_blk_offset,4)) || (!img_blk_offset)) {
+#ifdef AVR_DBG
+		USARTWriteChar('E');
+		USARTWriteChar('3');
+#endif
+		goto card_reset;
+	}
 
 	//Try to initialize our virtual RAM
 	if (ram_init(img_length)) {
 #ifdef AVR_DBG
 		USARTWriteChar('E');
-		USARTWriteChar('3');
+		USARTWriteChar('>');
 		USARTWriteChar(ram_init(img_length)+'0');
 #endif
 		goto card_reset;
@@ -95,6 +108,7 @@ card_reset:
 #endif
 	while (!status()) {
 		step();
+		LCD_LEDTGL;
 	}
 #ifdef AVR_DBG
 	USARTWriteChar('E');
@@ -103,6 +117,7 @@ card_reset:
 
 	//End of user program execution
 	ram_release(); //sync and disconnect RAM card
+	LCD_LEDOFF;
 
 #ifdef AVR_DBG
 //	msg(0,"Free RAM: %d bytes\n",freeRam());

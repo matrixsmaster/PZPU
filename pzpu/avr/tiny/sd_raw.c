@@ -171,26 +171,19 @@ uint8_t sd_raw_init()
     return 1;
 }
 
-uint8_t sd_raw_read(uint64_t offset, uint8_t* buffer, uintptr_t length)
+uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 {
-    uint64_t block_address;
-    uint16_t block_offset;
-    uint16_t read_length;
+    uint32_t blk = (offset / 4);
+	uint16_t n = 0;
 
-    while(length > 0)
-    {
-        /* determine byte count to read at once */
-        block_offset = offset & 0x01ff;
-        block_address = offset - block_offset;
-        read_length = 512 - block_offset; /* read up to block border */
-        if(read_length > length)
-            read_length = length;
+	if ((length > 1) && (length % 4)) return 0; //misaligned access
 
+	while (length) {
 		/* address card */
 		SPI_CARD;
 
 		/* send single block request */
-		if(sd_raw_send_command(CMD_READ_SINGLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? block_address / 512 : block_address)))
+		if(sd_raw_send_command(CMD_READ_SINGLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? blk : blk * 512)))
 		{
 			SPI_PERIPH;
 			return 0;
@@ -200,12 +193,14 @@ uint8_t sd_raw_read(uint64_t offset, uint8_t* buffer, uintptr_t length)
 		while(sd_raw_rec_byte() != 0xfe);
 
 		/* read byte block */
-		uint16_t read_to = block_offset + read_length;
-		for(uint16_t i = 0; i < 512; ++i)
-		{
+		for (uint16_t i = 0, j = 0; i < 512; i++) {
 			uint8_t b = sd_raw_rec_byte();
-			if(i >= block_offset && i < read_to)
-				*buffer++ = b;
+
+			if ((i >= img_blk_offset) && (j < 4) && length) {
+				buffer[n++] = b;
+				j++;
+				length--;
+			}
 		}
 
 		/* read crc16 */
@@ -216,18 +211,63 @@ uint8_t sd_raw_read(uint64_t offset, uint8_t* buffer, uintptr_t length)
 		SPI_PERIPH;
 
 		/* let card some time to finish */
-		sd_raw_rec_byte();
+		SPI_PREAD;
 
-        length -= read_length;
-        offset += read_length;
-    }
+		/* shift block */
+		blk++;
+	}
 
     return 1;
 }
 
-uint8_t sd_raw_write(uint64_t offset, const uint8_t* buffer, uintptr_t length)
+uint8_t sd_raw_write(const uint64_t offset, const uint8_t* buffer, uint16_t length)
 {
-	return 0;
+	uint32_t blk = (offset / 4);
+	uint16_t n = 0;
+
+	if ((length > 1) && (length % 4)) return 0; //misaligned access
+
+	while (length) {
+		/* address card */
+		SPI_CARD;
+
+		/* send single block request */
+		if(sd_raw_send_command(CMD_WRITE_SINGLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? blk : blk * 512)))
+		{
+			SPI_PERIPH;
+			return 0;
+		}
+
+		/* send start byte */
+        sd_raw_send_byte(0xfe);
+
+		/* read byte block */
+		for (uint16_t i = 0, j = 0; i < 512; i++) {
+			uint8_t b = 0xFF; //empty Flash cell state
+			if ((i >= img_blk_offset) && (j < 4) && length) {
+				b = buffer[n++];
+				j++;
+				length--;
+			}
+			sd_raw_send_byte(b);
+		}
+
+		/* write dummy crc16 */
+        sd_raw_send_byte(0xff);
+        sd_raw_send_byte(0xff);
+
+        /* wait while card is busy */
+        while(sd_raw_rec_byte() != 0xff);
+        sd_raw_rec_byte();
+
+        /* deaddress card */
+        SPI_PERIPH;
+
+		/* shift block */
+		blk++;
+	}
+
+    return 1;
 }
 
 inline uint8_t sd_raw_sync()

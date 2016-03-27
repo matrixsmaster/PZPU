@@ -16,9 +16,11 @@
 #if EMBED_AVR_MEGA
 #include "mega/avr_config.h"
 #include "mega/sd_raw.h"
+
 #elif EMBED_AVR_TINY
 #include "tiny/avr_config.h"
 #include "tiny/sd_raw.h"
+
 #else
 #error "Unknown AVR port"
 #endif
@@ -30,6 +32,6 @@
 uint32_t swap(uint32_t x);
 
 extern uint32_t img_offset;
-extern uint32_t ramsize;
+extern uint32_t ramsize; //TODO: merge it with img_length!
 
 #endif /* RAM_AVR_H_ */

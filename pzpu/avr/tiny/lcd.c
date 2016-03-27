@@ -8,6 +8,12 @@
 #include "soft_spi.h"
 #include <util/delay.h>
 
+uint8_t g_led;
+
+//init sequence
+const uint8_t LCDInitSeq[LCD_INITLEN] PROGMEM =
+{ 0x02, 0x28, 0x01, 0x06, 0x0C };
+
 void LCDSendNibble(const uint8_t dat, const LCDNibbleType typ)
 {
 	uint8_t out = 0;
@@ -18,6 +24,7 @@ void LCDSendNibble(const uint8_t dat, const LCDNibbleType typ)
 	LCD_SHF_SET(out,LCD_D5,(dat & 2));
 	LCD_SHF_SET(out,LCD_D6,(dat & 4));
 	LCD_SHF_SET(out,LCD_D7,(dat & 8));
+	out |= g_led; //preserve LED state
 
 	spi(out);
 	SPI_CLICK;
@@ -76,7 +83,7 @@ void LCD_Init(void)
 
 	for (i = 0; i < LCD_INITLEN; i++) {
 		LCD_EXEC_DELAY;
-		LCDSendByte(LCDInitSeq[i],LCDCmd);
+		LCDSendByte(pgm_read_byte(&(LCDInitSeq[i])),LCDCmd);
 	}
 
 	LCD_EXEC_DELAY;

@@ -116,9 +116,13 @@
 #define SD_RAW_SPEC_2 1
 #define SD_RAW_SPEC_SDHC 2
 
+/* Blockwise offset value */
+extern uint32_t img_blk_offset;
+
+/* Prototypes */
 uint8_t sd_raw_init();
-uint8_t sd_raw_read(uint64_t offset, uint8_t* buffer, uintptr_t length);
-uint8_t sd_raw_write(uint64_t offset, const uint8_t* buffer, uintptr_t length);
+uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length);
+uint8_t sd_raw_write(const uint64_t offset, const uint8_t* buffer, uint16_t length);
 uint8_t sd_raw_sync();
 
 #endif /* SD_RAW_H_ */

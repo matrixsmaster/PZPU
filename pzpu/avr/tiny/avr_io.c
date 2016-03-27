@@ -9,7 +9,7 @@
 #include "avr_io.h"
 #include "lcd.h"
 
-//static uint8_t lcd_px,lcd_py;
+static uint8_t lcd_px,lcd_py;
 
 void USARTInit(const uint32_t baud)
 {
@@ -27,31 +27,34 @@ inline char USARTReadIsReady(void)
 
 inline void USARTWriteChar(const char data)
 {
+	LCDWriteChar(data);
 }
 
 void USARTWriteString(const char* str)
 {
+    unsigned int i = 0;
+    while (str[i] != '\0')
+        USARTWriteChar(str[i++]);
 }
 
 void LCDInit(void)
 {
-	/*lcdInit();
-	lcdClear();
-	lcdSetCursor(LCD_CURSOR_BLINK);
-	lcd_px = lcd_py = 0;*/
+	LCD_Init();
+	LCDClear();
+	LCDCursor(LCDCursorBlink);
+	lcd_px = lcd_py = 0;
 }
 
 void LCDWriteChar(const char data)
 {
-	/*if (++lcd_px > LCD_SIZEW) {
+	if (++lcd_px > LCD_SIZEW) {
 		lcd_px = 0;
 		if (++lcd_py > LCD_SIZEH) {
 			lcd_py = 0;
 		}
-		lcdGotoXY(lcd_py,lcd_px);
+		LCDSetPos(lcd_px,lcd_py);
 	}
-	while (lcdIsBusy()) ;
-	lcdRawSendByte(data,LCD_DATA);*/
+	LCDSendByte(data,LCData);
 }
 
 inline static void printNibbleHex(const uint8_t b)
