@@ -175,6 +175,7 @@ uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 {
     uint32_t blk = (offset / 4);
 	uint16_t n = 0;
+	uint8_t rem = offset & 3; //reminder needed for byte-oriented unaligned accesses
 
 	if ((length > 1) && (length % 4)) return 0; //misaligned access
 
@@ -197,9 +198,12 @@ uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 			uint8_t b = sd_raw_rec_byte();
 
 			if ((i >= img_blk_offset) && (j < 4) && length) {
-				buffer[n++] = b;
-				j++;
-				length--;
+				if (rem) rem--;
+				else {
+					buffer[n++] = b;
+					j++;
+					length--;
+				}
 			}
 		}
 

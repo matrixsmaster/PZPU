@@ -116,25 +116,11 @@ static int argparse(int argc, char* argv[])
 
 		case ICA_OFFSET:
 			off = atoi(argv[i]);
-			if (!off) {
-				//zero offset means random offset generation
-				off = ceil((float)rand() / (float)RAND_MAX * (float)(card - vmram - 512*2 - 1)) + 512;
-				//align it to nearest sector
-				off /= 512;
-				off *= 512;
-			}
 			p = ICA_INVALID;
 			break;
 
 		case ICA_BLKOFF:
 			blkoff = atoi(argv[i]);
-			if (!off) {
-				//zero offset means random offset generation
-				blkoff = ceil((float)rand() / (float)RAND_MAX * (float)(512 - 5));
-				//align it to nearest sector
-				blkoff /= 512;
-				blkoff *= 512;
-			}
 			p = ICA_INVALID;
 			break;
 
@@ -152,20 +138,22 @@ static int argparse(int argc, char* argv[])
 static void create_normal(FILE* f, const char* bin, size_t len)
 {
 	struct SSDHeader hd;
-	hd.off = off;
-	hd.len = vmram;
 	char obuf[512]; //1 sector
 	unsigned i,j,n;
 
+	hd.off = off;
+	hd.len = vmram;
+	hd.blkoff = 0;
+
 	//start writing
-	printf("Writing... ");
+	printf("Writing, please wait... ");
 	fflush(stdout);
 	for (i = 0, j = 0, n = 0; i < card; i += 512, n++) {
 		memset(obuf,0,512);
 		//FIXME: unaligned access isn't possible so far!
 
 		if (i == 0) {
-			//write header
+			//write header (always in sector zero, offset zero)
 			memcpy(obuf,&hd,sizeof(hd));
 
 		} else if (i >= off) {
@@ -206,7 +194,48 @@ static void create_normal(FILE* f, const char* bin, size_t len)
 //files to preserve space. And I want to use it later :)
 static void create_dotted(FILE* f, const char* bin, size_t len)
 {
-	//TODO
+	struct SSDHeader hd;
+	char obuf[512]; //1 sector
+	unsigned i,n,p;
+
+	hd.off = off;
+	hd.len = vmram;
+	hd.blkoff = blkoff;
+
+	//start writing
+	printf("Writing, please wait... ");
+	fflush(stdout);
+	for (i = 0, n = 0, p = 0; n < card / 512; n++) {
+		if (fill >= 0) memset(obuf,(char)fill,512);
+		else memset(obuf,0xFF,512); //default state of "erased" flash memory cell is '1'
+
+		if (p < sizeof(struct SSDHeader)) {
+			//write part of header data
+			memcpy(obuf+blkoff,((char*)(&hd) + p),4);
+			p += 4;
+
+		} else if (n >= off / 4) {
+			//write RAM data
+			if (i < len) {
+				//write program data
+				if (i + 4 > len)
+					memcpy(obuf+blkoff,bin+i,len-i);
+				else
+					memcpy(obuf+blkoff,bin+i,4);
+
+			} else if ((fill >= 0) && (i < vmram)) {
+				//do nothing - we'll just write filler value
+
+			} else {
+				//we're done
+				break;
+			}
+			i += 4;
+		}
+
+		fwrite(obuf,512,1,f);
+	}
+	printf("done.\n%u sectors wrote.\n",n);
 }
 
 //The Entry Point
@@ -234,19 +263,34 @@ int main(int argc, char* argv[])
 	printf("VM RAM size is 0x%X (%u) bytes\n",vmram,vmram);
 
 	//check offset
+	if (!off) {
+		//zero offset means random offset generation
+		off = ceil((float)rand() / (float)RAND_MAX * (float)(card - vmram - 512*2 - 1)) + 512;
+		//align it to nearest sector
+		off /= 512;
+		off *= 512;
+	}
 	if ((mode == 0) && (off < 512)) {
 		puts("ERROR: The sector Zero is reserved. Image offset can't be less than 512 bytes.");
 		return 11;
 	}
-	if (off + vmram + sizeof(struct SSDHeader) >= card) {
+	if (off < sizeof(struct SSDHeader)) off = sizeof(struct SSDHeader);
+	if (off + vmram >= card) {
 		puts("ERROR: Unable to fit into the card.");
-		if (vmram + sizeof(struct SSDHeader) >= card)
+		if (vmram + sizeof(struct SSDHeader) < card)
 			puts("Try to use lower offset value.");
 		return 11;
 	}
 
 	//check space requirements for dotted image
 	if (mode == 1) {
+		if (!blkoff) {
+			//zero offset means random offset generation
+			blkoff = ceil((float)rand() / (float)RAND_MAX * (float)(512 - 5));
+			//align it to nearest sector
+			blkoff /= 512;
+			blkoff *= 512;
+		}
 		if (card / 128 <= vmram + sizeof(struct SSDHeader)) {
 			puts("ERROR: Unable to fit into the card.");
 			puts("You must take into consideration, that dotted RAM should be at least 128 times smaller than SD card size.");
@@ -254,6 +298,10 @@ int main(int argc, char* argv[])
 		}
 		if (card / 128 <= vmram + sizeof(struct SSDHeader) + off) {
 			puts("ERROR: Unable to fit into the card. Offset value is too high. Try to use zero offset.");
+			return 12;
+		}
+		if (blkoff > 512 - 4) {
+			puts("ERROR: Invalid blockwise offset.");
 			return 12;
 		}
 	}

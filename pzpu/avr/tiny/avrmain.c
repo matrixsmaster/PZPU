@@ -19,6 +19,8 @@
 
 uint32_t img_offset,img_length,img_blk_offset;
 
+//extern uint32_t sp,pc;
+
 #ifdef AVR_DBG
 static int freeRam()
 {
@@ -57,7 +59,7 @@ card_reset:
 #endif
 
 	//Read initial offset
-	if ((!sd_raw_read(0,(uint8_t*)&img_offset,4)) || (!img_offset)) {
+	if (!sd_raw_read(0,(uint8_t*)&img_offset,4)) {
 #ifdef AVR_DBG
 		USARTWriteChar('E');
 		USARTWriteChar('1');
@@ -75,7 +77,7 @@ card_reset:
 	}
 
 	//Read blockwise offset
-	if ((!sd_raw_read(8,(uint8_t*)&img_blk_offset,4)) || (!img_blk_offset)) {
+	if (!sd_raw_read(8,(uint8_t*)&img_blk_offset,4)) {
 #ifdef AVR_DBG
 		USARTWriteChar('E');
 		USARTWriteChar('3');
@@ -123,6 +125,34 @@ card_reset:
 //	msg(0,"Free RAM: %d bytes\n",freeRam());
 	USARTWriteChar('F');
 #endif
+
+//	LCDSetPos(0,0);
+//	LCDprintByteHex(pc>>24);
+//	LCDprintByteHex(pc>>16);
+//	LCDprintByteHex(pc>>8);
+//	LCDprintByteHex(pc);
+//	LCDprintByteHex(ram_rd_b(0x348));
+//	LCDprintByteHex(ram_rd_b(0x349));
+//	LCDprintByteHex(ram_rd_b(0x34a));
+//	LCDprintByteHex(ram_rd_b(0x34b));
+//	LCDprintByteHex(ram_rd_b(0x34c));
+//	LCDprintByteHex(ram_rd_b(0x34d));
+
+//	LCDSetPos(0,1);
+//	LCDprintByteHex(sp>>24);
+//	LCDprintByteHex(sp>>16);
+//	LCDprintByteHex(sp>>8);
+//	LCDprintByteHex(sp);
+//	LCDprintByteHex(get_cycles(0)>>24);
+//	LCDprintByteHex(get_cycles(0)>>16);
+//	LCDprintByteHex(get_cycles(0)>>8);
+//	LCDprintByteHex(get_cycles(0));
+//	LCDprintByteHex(ram_rd_b(0x0));
+//	LCDprintByteHex(ram_rd_b(0x1));
+//	LCDprintByteHex(ram_rd_b(0x2));
+//	LCDprintByteHex(ram_rd_b(0x3));
+//	LCDprintByteHex(ram_rd_b(0x4));
+//	LCDprintByteHex(ram_rd_b(0x5));
 
 	//Infinite sleep (until hard reset)
 	sleep_enable();

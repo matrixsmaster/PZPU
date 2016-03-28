@@ -10,7 +10,7 @@
 #define AVR_DBG 1
 
 //Enable dry-run (without real execution)
-#define AVR_DRYRUN 1
+//#define AVR_DRYRUN 1
 
 //16MHz internal clock (8 MHz RC + PLL)
 #define F_CPU 16000000

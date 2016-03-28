@@ -25,7 +25,7 @@ struct SICArgument {
 };
 
 struct SSDHeader {
-	uint32_t off,len;
+	uint32_t off,len,blkoff;
 };
 
 static const struct SICArgument arg_table[] = {

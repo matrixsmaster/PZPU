@@ -56,16 +56,3 @@ void LCDWriteChar(const char data)
 	}
 	LCDSendByte(data,LCData);
 }
-
-inline static void printNibbleHex(const uint8_t b)
-{
-	LCD_EXEC_DELAY;
-	if (b > 9) LCDSendByte(b-10+'A',LCData);
-	else LCDSendByte(b+'0',LCData);
-}
-
-void printByteHex(const uint8_t b)
-{
-	printNibbleHex(b >> 4);
-	printNibbleHex(b & 0xF);
-}

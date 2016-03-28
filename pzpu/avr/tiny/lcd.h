@@ -64,5 +64,6 @@ void LCDEnable(const LCDEnableState en);
 void LCDCursor(const LCDCursorKind cur);
 void LCDPuts(const char* s);
 void LCD_Init(void); //to not to confuse with top-level LCDInit() function in avr_io
+void LCDprintByteHex(const uint8_t b);
 
 #endif /* LCD_H_ */
