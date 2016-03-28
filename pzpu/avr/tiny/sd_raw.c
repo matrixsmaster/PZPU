@@ -201,9 +201,9 @@ uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 				if (rem) rem--;
 				else {
 					buffer[n++] = b;
-					j++;
 					length--;
 				}
+				j++;
 			}
 		}
 

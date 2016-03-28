@@ -18,8 +18,7 @@
 #include "debug.h"
 
 uint32_t img_offset,img_length,img_blk_offset;
-
-//extern uint32_t sp,pc;
+volatile uint32_t tmr = 0;
 
 #ifdef AVR_DBG
 static int freeRam()
@@ -31,11 +30,23 @@ static int freeRam()
 }
 #endif /* AVR_DBG */
 
+ISR(TIMER1_COMPA_vect)
+{
+	TCNT1 = 0;
+	PORTB ^= (1<<PB4);
+	tmr++;
+}
+
 int main(void)
 {
 	//Init serial interfaces
 	spi_init();
 	USARTInit(UART_BAUDRATE);
+
+	TCCR1 = (1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13)|(1<<CTC1);
+	TIMSK = (1<<OCIE1A);
+	OCR1A = 255;
+	DDRB |= (1<<PB4);
 
 	//Init LCD display
 #if LCD_SIZEW && LCD_SIZEH
@@ -108,10 +119,14 @@ card_reset:
 #ifdef AVR_DBG
 	USARTWriteString("D");
 #endif
+
+	sei();
 	while (!status()) {
 		step();
-		LCD_LEDTGL;
+//		LCD_LEDTGL;
 	}
+	cli();
+
 #ifdef AVR_DBG
 	USARTWriteChar('E');
 #endif
@@ -126,33 +141,12 @@ card_reset:
 	USARTWriteChar('F');
 #endif
 
-//	LCDSetPos(0,0);
-//	LCDprintByteHex(pc>>24);
-//	LCDprintByteHex(pc>>16);
-//	LCDprintByteHex(pc>>8);
-//	LCDprintByteHex(pc);
-//	LCDprintByteHex(ram_rd_b(0x348));
-//	LCDprintByteHex(ram_rd_b(0x349));
-//	LCDprintByteHex(ram_rd_b(0x34a));
-//	LCDprintByteHex(ram_rd_b(0x34b));
-//	LCDprintByteHex(ram_rd_b(0x34c));
-//	LCDprintByteHex(ram_rd_b(0x34d));
-
-//	LCDSetPos(0,1);
-//	LCDprintByteHex(sp>>24);
-//	LCDprintByteHex(sp>>16);
-//	LCDprintByteHex(sp>>8);
-//	LCDprintByteHex(sp);
-//	LCDprintByteHex(get_cycles(0)>>24);
-//	LCDprintByteHex(get_cycles(0)>>16);
-//	LCDprintByteHex(get_cycles(0)>>8);
-//	LCDprintByteHex(get_cycles(0));
-//	LCDprintByteHex(ram_rd_b(0x0));
-//	LCDprintByteHex(ram_rd_b(0x1));
-//	LCDprintByteHex(ram_rd_b(0x2));
-//	LCDprintByteHex(ram_rd_b(0x3));
-//	LCDprintByteHex(ram_rd_b(0x4));
-//	LCDprintByteHex(ram_rd_b(0x5));
+	LCDClear();
+	LCDSetPos(0,1);
+	LCDprintByteHex(tmr>>24);
+	LCDprintByteHex(tmr>>16);
+	LCDprintByteHex(tmr>>8);
+	LCDprintByteHex(tmr);
 
 	//Infinite sleep (until hard reset)
 	sleep_enable();
