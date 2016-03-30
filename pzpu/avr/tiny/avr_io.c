@@ -11,9 +11,9 @@
 
 static uint8_t lcd_px,lcd_py;
 
-void USARTInit(const uint32_t baud)
-{
-}
+//void USARTInit(const uint32_t baud)
+//{
+//}
 
 inline char USARTReadChar(void)
 {
@@ -64,15 +64,17 @@ inline static void printNibbleHex(const uint8_t b)
 	else LCDSendByte(b+'0',LCData);
 }
 
-void LCDprintByteHex(const uint8_t b)
+void LCDprintByteHex(const uint8_t b, const uint8_t curs)
 {
-	lcd_px += 2;
-	if (lcd_px > LCD_SIZEW) {
-		lcd_px = 0;
-		if (++lcd_py > LCD_SIZEH) {
-			lcd_py = 0;
+	if (curs) {
+		lcd_px += 2;
+		if (lcd_px > LCD_SIZEW) {
+			lcd_px = 0;
+			if (++lcd_py > LCD_SIZEH) {
+				lcd_py = 0;
+			}
+			LCDSetPos(lcd_px,lcd_py);
 		}
-		LCDSetPos(lcd_px,lcd_py);
 	}
 	printNibbleHex(b >> 4);
 	printNibbleHex(b & 0xF);

@@ -29,24 +29,26 @@ static int freeRam()
 	return (int)&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 #endif /* AVR_DBG */
-/*
-ISR(TIMER1_COMPA_vect)
+
+#ifdef AVR_TIME
+ISR(TIMER0_COMPA_vect)
 {
-	TCNT1 = 0;
-	PORTB ^= (1<<PB4);
 	tmr++;
 }
-*/
+#endif
+
 int main(void)
 {
 	//Init serial interfaces
 	spi_init();
-	USARTInit(UART_BAUDRATE);
+//	USARTInit(UART_BAUDRATE);
 
-	/*TCCR1 = (1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13)|(1<<CTC1);
-	TIMSK = (1<<OCIE1A);
-	OCR1A = 255;
-	DDRB |= (1<<PB4);*/
+#ifdef AVR_TIME
+	TCCR0A = (1<<WGM01); //CTC
+	TCCR0B = (1<<CS02)|(1<<CS00); //Clk/1024
+	TIMSK = (1<<OCIE0A);
+	OCR0A = 252; //62 Hz interrupts
+#endif
 
 	//Init LCD display
 #if LCD_SIZEW && LCD_SIZEH
@@ -105,7 +107,9 @@ card_reset:
 #endif
 		goto card_reset;
 	}
+#ifdef AVR_DBG
 	USARTWriteChar('B');
+#endif
 
 	//Everything is ready. Reset PZPU
 #ifndef AVR_DRYRUN
@@ -120,12 +124,11 @@ card_reset:
 	USARTWriteString("D");
 #endif
 
-	//sei();
+	sei();
 	while (!status()) {
 		step();
-//		LCD_LEDTGL;
 	}
-	//cli();
+	cli();
 
 #ifdef AVR_DBG
 	USARTWriteChar('E');
@@ -136,28 +139,23 @@ card_reset:
 	LCD_LEDOFF;
 
 #ifdef AVR_DBG
-//	msg(0,"Free RAM: %d bytes\n",freeRam());
-	USARTWriteChar('F');
+	LCDClear();
+	LCDSetPos(0,0);
+
+	int fr = freeRam();
+	LCDPuts("RAM:");
+	LCDprintByteHex(fr>>8,0);
+	LCDprintByteHex(fr,0);
+
+#ifdef AVR_TIME
+	LCDSetPos(0,1);
+	LCDPuts("Time");
+	LCDprintByteHex(tmr>>24,0);
+	LCDprintByteHex(tmr>>16,0);
+	LCDprintByteHex(tmr>>8,0);
+	LCDprintByteHex(tmr,0);
 #endif
-
-//	LCDClear();
-//	LCDSetPos(0,0);
-	/*uint8_t bb[8];
-	ram_rd_seq(0,8,bb);
-	for (uint8_t i = 0; i < 4; i++) LCDprintByteHex(ram_rd_b(i)); //LCDprintByteHex(bb[i]);
-	LCDSetPos(0,1);
-	for (uint8_t i = 4; i < 8; i++) LCDprintByteHex(ram_rd_b(i)); //LCDprintByteHex(bb[i]);*/
-//	LCDprintByteHex(get_cycles(0)>>24);
-//	LCDprintByteHex(get_cycles(0)>>16);
-//	LCDprintByteHex(get_cycles(0)>>8);
-//	LCDprintByteHex(get_cycles(0)>>0);
-
-	/*LCDClear();
-	LCDSetPos(0,1);
-	LCDprintByteHex(tmr>>24);
-	LCDprintByteHex(tmr>>16);
-	LCDprintByteHex(tmr>>8);
-	LCDprintByteHex(tmr);*/
+#endif
 
 	//Infinite sleep (until hard reset)
 	sleep_enable();

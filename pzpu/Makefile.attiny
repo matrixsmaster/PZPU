@@ -7,7 +7,7 @@ MCU = attiny85
 APP = pzpu_attiny
 
 CC = avr-gcc
-CCFLAGS = -std=c99 -Os -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/tiny -DEMBED_AVR=1 -DEMBED_AVR_TINY=1 -DRAM_ICACHE=4 -DRAM_SCACHE=27
+CCFLAGS = -std=c99 -Os -Wall -mmcu=$(MCU) -Wextra -I. -Iavr -Iavr/tiny -DEMBED_AVR=1 -DEMBED_AVR_TINY=1 -DRAM_ICACHE=16 -DRAM_SCACHE=27
 LDFLAGS = -mmcu=$(MCU) -Wl,--gc-sections -Wl,-Map,$(APP).map
 
 SUBTARGET = avr/tiny/

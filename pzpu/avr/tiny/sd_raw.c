@@ -274,10 +274,6 @@ uint8_t sd_raw_write(const uint64_t offset, const uint8_t* buffer, uint16_t leng
 			}
 		}
 
-		/* write dummy crc16 */
-//        sd_raw_send_byte(0xff);
-//        sd_raw_send_byte(0xff);
-
         /* wait while card is busy */
         while(sd_raw_rec_byte() != 0xff);
         sd_raw_rec_byte();

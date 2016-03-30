@@ -15,8 +15,11 @@
 //16MHz internal clock (8 MHz RC + PLL)
 #define F_CPU 16000000
 
-//UART channel speed
+//UART channel speed (not used so far)
 #define UART_BAUDRATE 9600
+
+//Enable time measurement
+#define AVR_TIME 1
 
 //SPI channel configuration
 #define SPIPORT		PORTB
