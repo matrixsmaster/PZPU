@@ -24,7 +24,7 @@
 #define SPIPIN		PINB
 #define PIN_DI		PB0
 #define PIN_DO		PB1
-#define PIN_SCK		PB2
+#define PIN_SCK		PB4
 #define PIN_SS		PB3
 
 //LCD module size (WxH) Set to zero to disable LCD output

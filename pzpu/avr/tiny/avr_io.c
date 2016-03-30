@@ -56,3 +56,24 @@ void LCDWriteChar(const char data)
 	}
 	LCDSendByte(data,LCData);
 }
+
+inline static void printNibbleHex(const uint8_t b)
+{
+	LCD_EXEC_DELAY;
+	if (b > 9) LCDSendByte(b-10+'A',LCData);
+	else LCDSendByte(b+'0',LCData);
+}
+
+void LCDprintByteHex(const uint8_t b)
+{
+	lcd_px += 2;
+	if (lcd_px > LCD_SIZEW) {
+		lcd_px = 0;
+		if (++lcd_py > LCD_SIZEH) {
+			lcd_py = 0;
+		}
+		LCDSetPos(lcd_px,lcd_py);
+	}
+	printNibbleHex(b >> 4);
+	printNibbleHex(b & 0xF);
+}

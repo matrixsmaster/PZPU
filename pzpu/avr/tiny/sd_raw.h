@@ -116,6 +116,9 @@
 #define SD_RAW_SPEC_2 1
 #define SD_RAW_SPEC_SDHC 2
 
+/* High-speed transfer window size */
+#define SD_RAW_HISPEED_WAIT _delay_us(195)
+
 /* Blockwise offset value */
 extern uint32_t img_blk_offset;
 

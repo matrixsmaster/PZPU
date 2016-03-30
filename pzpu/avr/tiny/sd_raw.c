@@ -10,9 +10,12 @@
 #include "sd_raw.h"
 #include "avr_config.h"
 #include "soft_spi.h"
+#include <util/delay.h>
 
 #define sd_raw_send_byte(X) spi(X)
 #define sd_raw_rec_byte() spi(0xFF)
+#define sd_raw_hispeed_on() GTCCR = (1<<PWM1B) | (1<<COM1B1)
+#define sd_raw_hispeed_off() GTCCR = 0
 
 /* card type state */
 static uint8_t sd_raw_card_type;
@@ -60,13 +63,6 @@ uint8_t sd_raw_init()
 
     /* initialization procedure */
     sd_raw_card_type = 0;
-
-    /* card needs 74 cycles minimum to start up */
-    //for(uint8_t i = 0; i < 10; ++i)
-    {
-        /* wait 8 clock cycles */
-        //sd_raw_rec_byte();
-    }
 
     /* address card */
     SPI_CARD;
@@ -168,9 +164,79 @@ uint8_t sd_raw_init()
     /* deaddress card */
     SPI_PERIPH;
 
+    /* prepare high-speed signal generator */
+    while (!(PLLCSR & (1<<PLOCK))) ; //wait for PLL to sync (must be set already, as the PLL is used for system clock, though)
+    PLLCSR |= (1<<PCKE); //enable High-Speed clock
+#if PIN_SCK == PB4
+    TCCR1 = (1<<CS10); //PLL input clock
+    OCR1B = 1; //duty (will be 33%, but I can't do anything with it)
+    OCR1C = 2; //period
+#else
+#error "Please configure Timer1 to match pinout!"
+#endif
+
     return 1;
 }
 
+uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
+{
+    uint32_t blk = (offset / 4);
+	uint16_t n = 0;
+	uint8_t rem = offset & 3; //reminder needed for byte-oriented unaligned accesses
+
+	if ((length > 1) && (length % 4)) return 0; //misaligned access
+
+	while (length) {
+		/* address card */
+		SPI_CARD;
+
+		/* send single block request */
+		if(sd_raw_send_command(CMD_READ_SINGLE_BLOCK, (sd_raw_card_type & (1 << SD_RAW_SPEC_SDHC) ? blk : blk * 512)))
+		{
+			SPI_PERIPH;
+			return 0;
+		}
+
+		/* wait for data block (start byte 0xfe) */
+		while(sd_raw_rec_byte() != 0xfe);
+
+		/* read byte block */
+		for (uint16_t i = 0, j = 0; i < 512; i++) {
+			uint8_t b = sd_raw_rec_byte();
+
+			if ((i >= img_blk_offset) && (j < 4) && length) {
+				if (rem) rem--;
+				else {
+					buffer[n++] = b;
+					length--;
+				}
+				j++;
+			}
+
+			if (j == 4) {
+				sd_raw_hispeed_on();
+				SD_RAW_HISPEED_WAIT;
+				sd_raw_hispeed_off();
+				break;
+			}
+		}
+
+		/* deaddress card */
+		SPI_PERIPH;
+
+		/* let card some time to finish */
+		SPI_PREAD;
+		SPI_PREAD;
+//		SPI_PREAD;
+//		SPI_PREAD;
+
+		/* shift block */
+		blk++;
+	}
+
+    return 1;
+}
+#if 0
 uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 {
     uint32_t blk = (offset / 4);
@@ -223,7 +289,7 @@ uint8_t sd_raw_read(const uint64_t offset, uint8_t* buffer, uint16_t length)
 
     return 1;
 }
-
+#endif
 uint8_t sd_raw_write(const uint64_t offset, const uint8_t* buffer, uint16_t length)
 {
 	uint32_t blk = (offset / 4);

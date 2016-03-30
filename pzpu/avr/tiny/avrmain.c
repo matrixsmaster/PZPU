@@ -29,24 +29,24 @@ static int freeRam()
 	return (int)&v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 #endif /* AVR_DBG */
-
+/*
 ISR(TIMER1_COMPA_vect)
 {
 	TCNT1 = 0;
 	PORTB ^= (1<<PB4);
 	tmr++;
 }
-
+*/
 int main(void)
 {
 	//Init serial interfaces
 	spi_init();
 	USARTInit(UART_BAUDRATE);
 
-	TCCR1 = (1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13)|(1<<CTC1);
+	/*TCCR1 = (1<<CS10)|(1<<CS11)|(1<<CS12)|(1<<CS13)|(1<<CTC1);
 	TIMSK = (1<<OCIE1A);
 	OCR1A = 255;
-	DDRB |= (1<<PB4);
+	DDRB |= (1<<PB4);*/
 
 	//Init LCD display
 #if LCD_SIZEW && LCD_SIZEH
@@ -120,17 +120,16 @@ card_reset:
 	USARTWriteString("D");
 #endif
 
-	sei();
+	//sei();
 	while (!status()) {
 		step();
 //		LCD_LEDTGL;
 	}
-	cli();
+	//cli();
 
 #ifdef AVR_DBG
 	USARTWriteChar('E');
 #endif
-//	msg(0,"Cycles = 0x"PFMT_32XINT PFMT_32XINT"\n",get_cycles(1),get_cycles(0));
 
 	//End of user program execution
 	ram_release(); //sync and disconnect RAM card
@@ -141,12 +140,24 @@ card_reset:
 	USARTWriteChar('F');
 #endif
 
-	LCDClear();
+//	LCDClear();
+//	LCDSetPos(0,0);
+	/*uint8_t bb[8];
+	ram_rd_seq(0,8,bb);
+	for (uint8_t i = 0; i < 4; i++) LCDprintByteHex(ram_rd_b(i)); //LCDprintByteHex(bb[i]);
+	LCDSetPos(0,1);
+	for (uint8_t i = 4; i < 8; i++) LCDprintByteHex(ram_rd_b(i)); //LCDprintByteHex(bb[i]);*/
+//	LCDprintByteHex(get_cycles(0)>>24);
+//	LCDprintByteHex(get_cycles(0)>>16);
+//	LCDprintByteHex(get_cycles(0)>>8);
+//	LCDprintByteHex(get_cycles(0)>>0);
+
+	/*LCDClear();
 	LCDSetPos(0,1);
 	LCDprintByteHex(tmr>>24);
 	LCDprintByteHex(tmr>>16);
 	LCDprintByteHex(tmr>>8);
-	LCDprintByteHex(tmr);
+	LCDprintByteHex(tmr);*/
 
 	//Infinite sleep (until hard reset)
 	sleep_enable();

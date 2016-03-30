@@ -17,5 +17,6 @@ void USARTWriteString(const char* str);
 
 void LCDInit(void);
 void LCDWriteChar(const char data);
+void LCDprintByteHex(const uint8_t b);
 
 #endif /* AVR_IO_H_ */
