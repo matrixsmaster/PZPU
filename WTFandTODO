@@ -1,9 +1,0 @@
-_________________________________WTF?!____________________________________
-The main goal of this project is creation of embeddable version of
-x86-compatible virtual machine, which may relatively easily run on something
-really low-cost. Like cheap MCUs. It doesn't matter which chip you'll use!
-Thanks to its double-layer abstraction, DOScard may even run on ATTiny85!
-This is a fun weekend project, so don't expect anything really usable :)
-But if you want to run your beloved old DOS software on a nice and small
-totaly HOMEBREW "cardboard" PC (which will cost you around $15) -- feel
-free to contribute and share the fun!
