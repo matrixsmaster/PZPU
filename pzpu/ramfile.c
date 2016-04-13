@@ -3,35 +3,48 @@
  * GPL v2
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ram.h"
 #include "pfmt.h"
 #include <byteswap.h> //for endianness conversion
 
-#if RAM_OS_ENABLED
-#include <stdio.h>
-#endif
-
 #ifdef RAM_DBG
 #include "debug.h"
 #endif
 
-static uint8_t* RAM = NULL;
+#ifdef RAM_FILE
+
+static FILE* RAM = NULL;
 extern uint32_t ramsize;
 
 int ram_init(uint32_t sz)
 {
+	//release file handle before create a new one
 	if (RAM) ram_release();
-	RAM = (uint8_t*)malloc(sz);
+
+	//open a memory file
+	RAM = fopen(RAM_FILE,"r+");
 	if (!RAM) return 1;
+
+	//check the file size
+	fseek(RAM,0,SEEK_END);
+	size_t fsz = ftell(RAM);
+	if ((!sz) && fsz) sz = fsz; //use RAM file size as RAM size
+	else if (fsz < sz) {
+		ram_release();
+		return 2;
+	}
+
+	//set RAM size
 	ramsize = sz;
-	memset(RAM,0,sz);
 
 #ifdef RAM_DBG
 	msg(0,"RAM of "PFMT_32UINT" bytes successfully initialized.\n",sz);
 #endif
 
+	//Initialize caches
 #if RAM_ICACHE
 	ram_icache_init();
 #endif
@@ -52,7 +65,7 @@ void ram_release()
 #endif
 
 	if (!RAM) return;
-	free(RAM);
+	fclose(RAM);
 	ramsize = 0;
 	RAM = NULL;
 
@@ -61,13 +74,17 @@ void ram_release()
 #endif
 }
 
-#ifdef RAM_OS_ENABLED
 int ram_load(const char* fn, uint32_t maxsz)
 {
 	size_t sz;
+	uint8_t buf[RAM_BUFSIZE];
+	int r;
+
 	FILE* f = fopen(fn,"r");
 	if (!f) return -1;
+	if (maxsz == 0) maxsz = ramsize; //use whole memory if no constraint applied
 
+	//Check the file size
 	fseek(f,0,SEEK_END);
 	sz = ftell(f);
 	if (sz >= maxsz) {
@@ -79,12 +96,19 @@ int ram_load(const char* fn, uint32_t maxsz)
 	}
 	fseek(f,0,SEEK_SET);
 
-	if (fread(RAM,sz,1,f) < 1) {
+	//Copy contents
+	fseek(RAM,0,SEEK_SET);
+	while (sz) {
+		r = fread(buf,1,RAM_BUFSIZE,f);
+		if (!r) {
 #ifdef RAM_DBG
-		msg(1,"Can't load all the bytes.\n");
+			msg(1,"Can't load all the bytes.\n");
 #endif
-		fclose(f);
-		return 2;
+			fclose(f);
+			return 2;
+		}
+		fwrite(buf,r,1,RAM);
+		sz -= r;
 	}
 
 #ifdef RAM_DBG
@@ -103,7 +127,6 @@ int ram_load(const char* fn, uint32_t maxsz)
 
 	return 0;
 }
-#endif /* RAM_OS_ENABLED */
 
 void ram_wr_dw(uint32_t adr, uint32_t val)
 {
@@ -119,9 +142,12 @@ void ram_wr_dw(uint32_t adr, uint32_t val)
 #endif
 		return;
 	}
+
 	//big endian:
 	val = __bswap_32(val);
-	memcpy(RAM+adr,&val,4);
+	if (!fseek(RAM,adr,SEEK_SET)) {
+		fwrite(&val,4,1,RAM);
+	}
 #endif /* SCACHE */
 }
 
@@ -140,8 +166,10 @@ uint32_t ram_rd_dw(uint32_t adr)
 #endif
 		return r;
 	}
+
 	//big endian:
-	memcpy(&r,RAM+adr,4);
+	if (fseek(RAM,adr,SEEK_SET)) return 0; //fail
+	if (!fread(&r,4,1,RAM)) return 0; //fail
 	return __bswap_32(r);
 #endif /* SCACHE */
 }
@@ -160,7 +188,11 @@ uint8_t ram_rd_b(uint32_t adr)
 #endif
 		return 0;
 	}
-	return RAM[adr];
+
+	uint8_t r;
+	if (fseek(RAM,adr,SEEK_SET)) return 0; //fail
+	if (!fread(&r,1,1,RAM)) return 0; //fail
+	return r;
 #endif /* ICACHE */
 }
 
@@ -178,8 +210,8 @@ uint8_t ram_rd_seq(uint32_t start, uint8_t len, uint8_t* buf)
 	if (start + len >= ramsize)
 		len = ramsize - start;
 
-	memcpy(buf,RAM+start,len);
-	return len;
+	if (fseek(RAM,start,SEEK_SET)) return 0; //fail
+	return fread(buf,1,len,RAM);
 }
 
 uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf)
@@ -196,6 +228,8 @@ uint8_t ram_wr_seq(uint32_t start, uint8_t len, const uint8_t* buf)
 	if (start + len >= ramsize)
 		len = ramsize - start;
 
-	memcpy(RAM+start,buf,len);
-	return len;
+	if (fseek(RAM,start,SEEK_SET)) return 0; //fail
+	return fwrite(buf,1,len,RAM);
 }
+
+#endif /* RAM_FILE */

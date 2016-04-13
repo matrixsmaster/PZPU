@@ -11,8 +11,15 @@
 //Debug output enable
 //#define RAM_DBG 1
 
+//Use a file instead for virtual memory buffer
+#define RAM_FILE "ram.bin"
+
+#ifdef RAM_FILE
+//Amount of memory for file-to-file transactions
+#define RAM_BUFSIZE 512
 //Enable OS functions (file I/O)
-//#define RAM_OS_ENABLED 1
+#define RAM_OS_ENABLED 1
+#endif
 
 //Abort on boundary tresspassing
 #define RAM_OUT_ABORT 1

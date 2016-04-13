@@ -4,13 +4,13 @@
 #
 
 CC = gcc
-CCFLAGS = -O2 -g -Wall -Wextra
+CCFLAGS = -O2 -g -Wall -Wextra -I. -I..
 LDFLAGS = 
 APP = pzpu
 
-MODE = -DRAM_OS_ENABLED=1 -DPZPU_IOINTERACT=1 -DDEBUG_OS_ENABLED=1
+MODE = -DRAM_OS_ENABLED=1 -DPZPU_IOINTERACT=1 -DDEBUG_OS_ENABLED=1 -DMYSIZE=0
 
-OBJS = debug.o ram.o ram_pc.o io.o io_pc.o pzpu.o main.o
+OBJS = debug.o ram.o ramfile.o pc/ram_pc.o io.o pc/io_pc.o pzpu.o pc/pcmain.o
 
 all: $(APP)
 
@@ -22,4 +22,5 @@ $(APP): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o $(APP)
+	rm -f *.o pc/*.o $(APP)
+	dd if=/dev/zero of=ram.bin bs=1M count=2

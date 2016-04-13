@@ -9,31 +9,49 @@
 #include "ram.h"
 #include "pfmt.h"
 
+#ifndef MYSIZE
 #define MYSIZE 0x00200000
+#endif
+
 #define BREAKA 0
+
+#if MYSIZE == 0
+extern uint32_t ramsize; //reference
+#endif
 
 int main(int argc, char* argv[])
 {
+	int r;
 #if BREAKA > 0
 	unsigned n = 0;
 #endif
 
+	//Check program arguments
 	if (argc < 2) {
 		printf("Usage: %s <.bin>\n",argv[0]);
 		return 1;
 	}
 
-	if (ram_init(MYSIZE)) {
-		printf("Unable to allocate RAM (try lesser size value)\n");
+	//Try to init RAM
+	r = ram_init(MYSIZE);
+	if (r) {
+		printf("Unable to allocate RAM (code %d)\n",r);
 		return 2;
 	}
-	if (ram_load(argv[1],MYSIZE)) {
-		printf("Unable to load file!\n");
+
+	//And load it with binary program
+	r = ram_load(argv[1],0);
+	if (r) {
+		printf("Unable to load file (code %d)\n",r);
 		ram_release();
 		return 3;
 	}
 
+#if MYSIZE > 0
 	reset(MYSIZE);
+#else
+	reset(ramsize);
+#endif
 
 	while (!status()) {
 		step();
