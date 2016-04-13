@@ -122,7 +122,7 @@ int ram_load(const char* fn, uint32_t maxsz)
 	ram_icache_init();
 #endif
 #if RAM_SCACHE
-	ram_scache_init(sz-4);
+	ram_scache_init(ramsize-4);
 #endif
 
 	return 0;

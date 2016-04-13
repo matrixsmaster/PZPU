@@ -4,7 +4,7 @@
 #
 
 CC = gcc
-CCFLAGS = -O2 -g -Wall -Wextra -I. -I..
+CCFLAGS = -O0 -g -Wall -Wextra -I. -I..
 LDFLAGS = 
 APP = pzpu
 
