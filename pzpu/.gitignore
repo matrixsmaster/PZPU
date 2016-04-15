@@ -3,5 +3,6 @@
 *.bin
 *.elf
 *.map
+*.pex
 pzpu
 
