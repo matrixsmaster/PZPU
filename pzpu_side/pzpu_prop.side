@@ -1,0 +1,24 @@
+pzpu_prop.c
+debug.c
+io.c
+pzpu.c
+ram.c
+ramfile.c
+debug.h
+io.h
+pfmt.h
+pzpu.h
+ram.h
+io_prop.c
+utils_prop.h
+FileDriver.c
+>compiler=C
+>memtype=xmmc external flash code main ram data
+>optimize=-O2
+>-m32bit-doubles
+>-Wall
+>-fno-exceptions
+>-enable_pruning
+>defs::-std=c99
+>-lm
+>BOARD::DEMO-SD2-SDXMMC

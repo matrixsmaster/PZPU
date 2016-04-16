@@ -3,12 +3,20 @@
  * GPL v2
  */
 
+//#include <errno.h>
+#include "ram.h"
+#include "pfmt.h"
+
+#if __x86__ || __x86_64__
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ram.h"
-#include "pfmt.h"
 #include <byteswap.h> //for endianness conversion
+#else
+#include <simpletools.h>
+#include "utils_prop.h" //FIXME: make swap function global in some new module
+#define __bswap_32 swap
+#endif
 
 #ifdef RAM_DBG
 #include "debug.h"
@@ -25,7 +33,10 @@ int ram_init(uint32_t sz)
 	if (RAM) ram_release();
 
 	//open a memory file
-	RAM = fopen(RAM_FILE,"r+");
+#ifdef RAM_DBG
+    msg(0,"Opening %s...\n",RAM_FILE);
+#endif
+	RAM = fopen(RAM_FILE,"r+b");
 	if (!RAM) return 1;
 
 	//check the file size
@@ -98,6 +109,9 @@ int ram_load(const char* fn, uint32_t maxsz)
 
 	//Copy contents
 	fseek(RAM,0,SEEK_SET);
+#ifdef RAM_DBG
+    size_t sz_ = sz;
+#endif
 	while (sz) {
 		r = fread(buf,1,RAM_BUFSIZE,f);
 		if (!r) {
@@ -112,7 +126,7 @@ int ram_load(const char* fn, uint32_t maxsz)
 	}
 
 #ifdef RAM_DBG
-	msg(0,"File '%s' data (%lu bytes) successfully loaded into RAM.\n",fn,sz);
+	msg(0,"File '%s' data (%lu bytes) successfully loaded into RAM.\n",fn,sz_);
 #endif
 
 	fclose(f);

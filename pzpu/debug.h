@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Enable OS terminal IO functions
-//#define DEBUG_OS_ENABLED 1
+#define DEBUG_OS_ENABLED 1
 
 //Max message length for embedded devices
 #define DEBUG_MAXMSGLEN 56

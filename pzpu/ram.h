@@ -9,7 +9,7 @@
 #include <inttypes.h>
 
 //Debug output enable
-//#define RAM_DBG 1
+#define RAM_DBG 1
 
 //Use a file instead for virtual memory buffer
 #define RAM_FILE "ram.bin"
@@ -22,13 +22,13 @@
 #endif
 
 //Abort on boundary tresspassing
-#define RAM_OUT_ABORT 1
+//#define RAM_OUT_ABORT 1
 
 //Use instruction cache
-#define RAM_ICACHE 32
+#define RAM_ICACHE 48
 
 //Use stack cache
-#define RAM_SCACHE 15
+#define RAM_SCACHE 31
 
 //Prototypes
 
