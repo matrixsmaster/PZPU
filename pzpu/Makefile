@@ -13,10 +13,6 @@ atmega:
 
 attiny:
 	make -f Makefile.attiny
-
-.PHONY: propeller
-propeller:
-	make -f Makefile.prop
 	
 .PHONY: clean
 clean:
