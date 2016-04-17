@@ -5,7 +5,7 @@
 
 APP		= pzpu_prop
 
-PREFIX	= /mnt/angar/toolchain/propgcc_build/bin
+PREFIX	= /mnt/angar/toolchain/propgcc_1_0/bin
 
 CC		= $(PREFIX)/propeller-elf-gcc
 OBJDUMP = $(PREFIX)/propeller-elf-objdump
@@ -17,7 +17,7 @@ CCFLAGS	= $(P8FLAGS) -Os -fno-exceptions -std=c99 -ffunction-sections
 LDFLAGS = -Wl,--gc-sections
 LDLIBS	= -lm -lsimpletools -lsimpletext -lsimplei2c
 
-PLDFLAGS = -Dreset=dtr -b test_board -e -r -z
+PLDFLAGS = -Dreset=dtr -b test_board -e -r -t -z
 
 SLPATH	= $(PREFIX)/../Learn/Libraries
 SLIBS	= -I$(SLPATH)/Utility/libsimpletools@
@@ -41,3 +41,4 @@ upload: $(APP).pex
 
 .PHONY: clean
 clean:
+	rm -f $(APP).pex $(APP).elf
