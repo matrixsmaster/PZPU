@@ -5,6 +5,8 @@
 
 APP		= pzpu_prop
 
+OBJS	= debug.o io.o pzpu.o ram.o ramfile.o propeller/io_prop.o propeller/pmain.c
+
 PREFIX	= /mnt/angar/toolchain/propgcc_1_0/bin
 
 CC		= $(PREFIX)/propeller-elf-gcc
@@ -12,9 +14,9 @@ OBJDUMP = $(PREFIX)/propeller-elf-objdump
 LOAD	= $(PREFIX)/propeller-load
 
 P8FLAGS = -mxmmc -m32bit-doubles
-CCFLAGS	= $(P8FLAGS) -Os -fno-exceptions -std=c99 -ffunction-sections
+CCFLAGS	= $(P8FLAGS) -O2 -fno-exceptions -std=c99
 
-LDFLAGS = -Wl,--gc-sections
+LDFLAGS = -ffunction-sections -Wl,--gc-sections
 LDLIBS	= -lm -lsimpletools -lsimpletext -lsimplei2c
 
 PLDFLAGS = -Dreset=dtr -b test_board -e -r -t -z
@@ -30,10 +32,13 @@ SLIBPATH = $(subst @,/xmmc,$(subst -I,-L,$(SLIBS)))
 
 all: $(APP).pex
 
-$(APP).pex:
-	$(CC) -I. -L. $(CCFLAGS) $(SLIBINCL) $(SLIBPATH) propeller/pmain.c -o $(APP).elf $(LDFLAGS) $(LDLIBS)
+$(APP).pex: $(OBJS)
+	$(CC) -I. -L. $(CCFLAGS) $(SLIBINCL) $(SLIBPATH) -o $(APP).elf $(OBJS) $(LDFLAGS) $(LDLIBS)
 	$(OBJDUMP) -h $(APP).elf
 	$(LOAD) -x $(APP).elf
+	
+%.o: %.c
+	$(CC) -I. -L. $(CCFLAGS) $(SLIBINCL) $(SLIBPATH) -c $< -o $@ $(LDFLAGS) $(LDLIBS)
 
 upload: $(APP).pex
 	$(LOAD) -I $(PREFIX)/../propeller-load -I ./propeller $(PLDFLAGS) $(APP).elf
@@ -41,4 +46,4 @@ upload: $(APP).pex
 
 .PHONY: clean
 clean:
-	rm -f $(APP).pex $(APP).elf
+	rm -f $(APP).pex $(APP).elf *.o propeller/*.o

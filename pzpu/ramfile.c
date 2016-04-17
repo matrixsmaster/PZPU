@@ -14,7 +14,7 @@
 #include <byteswap.h> //for endianness conversion
 #else
 #include <simpletools.h>
-#include "utils_prop.h" //FIXME: make swap function global in some new module
+#include "propeller/utils_prop.h" //FIXME: make swap function global in some new module
 #define __bswap_32 swap
 #endif
 
