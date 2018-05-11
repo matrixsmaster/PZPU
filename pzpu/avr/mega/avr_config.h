@@ -7,7 +7,7 @@
 #define AVR_CONFIG_H_
 
 //Enable debugging of internal functions
-#define AVR_DBG 1
+//#define AVR_DBG 1
 
 //Enable dry-run (without real execution)
 //#define AVR_DRYRUN 1
@@ -33,6 +33,7 @@
 //LCD module size (WxH) Set to zero to disable LCD output
 #define LCD_SIZEW 12
 #define LCD_SIZEH 2
+#define LCD_HELLO "Sofy rev.A3"
 
 //LCD pin map: data (4-bit interface D4-D7)
 #define LCDDATAPORT		PORTD
