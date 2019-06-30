@@ -18,7 +18,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.189474321." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.493310056" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
 							<option id="cdt.managedbuild.option.gnu.cross.prefix.1381229499" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix" value="zpu-elf-" valueType="string"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.458578446" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/mnt/angar/toolchain/zpu-elf-linux64/bin" valueType="string"/>
+							<option id="cdt.managedbuild.option.gnu.cross.path.458578446" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/master/zpugcc/releases/zpu-elf-linux64/bin" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1820635034" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder buildPath="${workspace_loc:/testzpu}/Debug" id="cdt.managedbuild.builder.gnu.cross.1937165026" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.2072703151" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">

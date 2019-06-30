@@ -14,6 +14,7 @@
 #include "pzpu.h"
 #include "ram.h"
 #include "debug.h"
+#include "lcd_library.h"
 
 uint32_t img_offset,img_length;
 
@@ -71,6 +72,8 @@ int main(void)
 	msg(0,"int = %d\n",sizeof(int));
 	msg(0,"long = %d\n",sizeof(long));
 	msg(0,"long long = %d\n",sizeof(long long));
+#elif LCD_SIZEW && LCD_SIZEH
+	lcdPuts(LCD_HELLO);
 #endif
 
 	//Init SD card interface
@@ -81,11 +84,19 @@ card_reset:
 	LED0_OFF;
 	while (!sd_raw_init()) {
 		_delay_ms(1000);
+#if LCD_SIZEW && LCD_SIZEH
+		lcdClear();
+		lcdGotoXY(0,0);
+		lcdPuts("No card!");
+#endif
 	}
 	LED0_ON;
 
 #ifdef AVR_DBG
 	USARTWriteString("Card connected\n");
+#elif LCD_SIZEW && LCD_SIZEH
+	lcdClear();
+	lcdGotoXY(0,0);
 #endif
 
 	//Read initial offset

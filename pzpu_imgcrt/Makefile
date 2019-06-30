@@ -5,7 +5,8 @@
 
 CC = gcc
 CCFLAGS = -O2 -g -Wall
-LDFLAGS = -lm
+LDFLAGS = 
+LDLIBS = -lm
 APP = pzpu-imgcrt
 
 OBJS = main.o
@@ -13,7 +14,7 @@ OBJS = main.o
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(CC) $(LDFLAGS) -o $(APP) $(OBJS)
+	$(CC) $(LDFLAGS) -o $(APP) $(OBJS) $(LDLIBS)
 
 %.o: %.c
 	$(CC) $(CCFLAGS) -c $< -o $@
