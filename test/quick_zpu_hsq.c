@@ -238,7 +238,7 @@ void iemu(char x)
 
 void exec(int x)
 {
-    printf("Executing %d\n",x);
+    //printf("Executing %d\n",x);
     
 	if (x == 0) {
 		halt = 1;

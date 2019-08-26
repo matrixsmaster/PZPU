@@ -1,16 +1,24 @@
 // Subleq experiment
 //(C) Dmitry 'MatrixS_Master' Solovyev, 2019
 
+//#define NDEBUG
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
-#define RAMSIZE 123000
+#define RAMSIZE (1024*1024*32/4)
+#define SCANPAT "%ld"
+typedef int64_t bint;
+
+static bint ram[RAMSIZE];
 
 int main(int argc, char* argv[])
 {
+    printf("Subleq interpreter by MatrixS_Master.\nBase type size = %lu\n\n",sizeof(bint));
     assert(argc >= 2);
 
     int step = ((argc > 2) && (!strcmp(argv[2],"-s")))? 1 : 0;
@@ -18,17 +26,16 @@ int main(int argc, char* argv[])
     FILE* fi = fopen(argv[1],"r");
     assert(fi);
 
-    int ram[RAMSIZE];
-    int val, ip = 0, maxip = 0;
-    while (fscanf(fi,"%d",&val) > 0) {
+    bint val, ip = 0, maxip = 0;
+    while (fscanf(fi,SCANPAT,&val) > 0) {
         ram[ip++] = val;
         assert(ip < RAMSIZE);
     }
     fclose(fi);
-    printf("Last val = %d, ip = %d\n",val,ip);
+    printf("Last val = " SCANPAT ", ip = " SCANPAT "\n", val,ip);
 
     ip = 0;
-    int a,b,c;
+    bint a,b,c;
     size_t n = 0;
     do {
         a = ram[ip++];
@@ -37,7 +44,7 @@ int main(int argc, char* argv[])
         assert(ip < RAMSIZE);
 
         if (step) {
-            printf("N = %lu, IP = %d, Ra = %d, Rb = %d, Rc = %d, RRa = %d, RRb = %d\n",n,ip,a,b,c,ram[a],ram[b]);
+            printf("N = %lu, IP = %ld, Ra = %ld, Rb = %ld, Rc = %ld, RRa = %ld, RRb = %ld\n",n,ip,a,b,c,ram[a],ram[b]);
             getchar();
         }
 
@@ -61,6 +68,6 @@ int main(int argc, char* argv[])
         n++;
     } while (ip >= 0);
 
-    printf("\nExecution complete. Top IP = %d\nDone.\n",maxip);
+    printf("\nExecution complete. Top IP = " SCANPAT "\nDone.\n",maxip);
     return 0;
 }
