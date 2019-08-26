@@ -75,6 +75,8 @@ void wr_dword(uint32_t addr, uint32_t w)
 			printf("WR violation @ 0x%08X: address below zero",addr);
 		} else if (addr == 0x080A000C) {
 			putchar(w);
+            printf("\nCycle = %u\n",cycle);
+            abort();
 		} else {
 //			violation(addr,false,4,"IO space access violation")
 		}
@@ -283,7 +285,7 @@ bool exec_ext(uint8_t x)
 
 void iemu(uint8_t x)
 {
-#if 1
+#if 0
 	if (exec_ext(x)) {
 		return;
 	}

@@ -359,6 +359,10 @@ int main()
         //printf("Line %d (%d) out of %d copied\n",i,x,blob_len/4);
     }
     reset();
-    while (!halt) step();
+    n = 0;
+    while (!halt) {
+        step();
+        if ((++n) % 10000 == 0) printf("%d\n",n);
+    }
     puts("\nQuit.\n");
 }
