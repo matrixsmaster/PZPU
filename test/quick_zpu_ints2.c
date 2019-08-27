@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "testzpu.h"
+#include "f86.h"
 
 #define int long long int
+#define RAMSIZE (1024*1024*32)
 
-int RAM[2097152];
+int RAM[RAMSIZE];
 int PC = 0;
-int SP = 2097152 - 8;
+int SP = RAMSIZE - 8;
 int PChalt = 0;
 int cycle = 0;
 int halt = 1;
@@ -82,8 +83,8 @@ int band(int a, int b)
 
 int bxor(int a, int b)
 {
-    int la = a;
-    int lb = b;
+    //int la = a;
+    //int lb = b;
     int c = 0;
     for (int x = 0; x < 32; x++) {
         c += c;
@@ -92,17 +93,17 @@ int bxor(int a, int b)
         if (a > 4294967295) a -= 4294967296;
         b += b;
         if (b > 4294967295) b -= 4294967296;
-        printf("%lld\t%lld\t%lld\n",a,b,c);
+        //printf("%lld\t%lld\t%lld\n",a,b,c);
     }
-    printf("%lld ^ %lld = %lld\n",la,lb,c);
-    assert(c < 4294967296);
-    assert(c == (la^lb));
+    //printf("%lld ^ %lld = %lld\n",la,lb,c);
+    //assert(c < 4294967296);
+    //assert(c == (la^lb));
     return c;
 }
 
 int get_dword(int addr)
 {
-	if (addr < 0 || addr >= 2097152) {
+	if (addr < 0 || addr >= RAMSIZE) {
 		int ret = 0;
 		addr = addr - 134873088;
 		if (addr < 0) {
@@ -119,7 +120,7 @@ int get_dword(int addr)
 	}
 
 	if (!band(addr,3)) {
-        printf("RAM @ %d = %d\n",brshift(addr,2),RAM[brshift(addr,2)]);
+        //printf("RAM @ %d = %d\n",brshift(addr,2),RAM[brshift(addr,2)]);
 		return RAM[brshift(addr,2)];
 	} else {
         printf("RD violation @ 0x%08X: reminder is %u",addr,band(addr,3));
@@ -145,7 +146,7 @@ int get_byte(int addr)
 
 void wr_dword(int addr, int w)
 {
-	if (addr < 0 || addr >= 2097152) {
+	if (addr < 0 || addr >= RAMSIZE) {
 		if (addr < 0) {
 			printf("WR violation @ 0x%08X: address below zero",addr);
 		} else if (addr == 134873100) {
@@ -154,7 +155,7 @@ void wr_dword(int addr, int w)
 //			violation(addr,0,4,"IO space access violation")
 		}
 	} else if (!band(addr,3)) {
-        printf("Putting %d to RAM @ %d\n",band(w,4294967295),brshift(addr,2));
+        //printf("Putting %d to RAM @ %d\n",band(w,4294967295),brshift(addr,2));
 		RAM[brshift(addr,2)] = band(w,4294967295);
 	} else {
 		printf("WR violation @ 0x%08X: reminder is %u",addr,band(addr,3));
@@ -241,8 +242,8 @@ void iemu(char x)
 
 void exec(int x)
 {
-    printf("PC = %d, SP = %d, Executing %d\n",PC,SP,x);
-    getchar();
+    //printf("PC = %d, SP = %d, Executing %d\n",PC,SP,x);
+    //getchar();
     
 	if (x == 0) {
 		halt = 1;
@@ -290,7 +291,7 @@ void exec(int x)
 
 	} else if (x >= 64) { //ZPU_STORESP
 		int a = sp_off(bxor(band(x,31),16));
-        printf("StoreSP x = %d, (x&31) = %d, xor16 = %d, a = %d\n",x,band(x,31),bxor(band(x,31),16),a);
+        //printf("StoreSP x = %d, (x&31) = %d, xor16 = %d, a = %d\n",x,band(x,31),bxor(band(x,31),16),a);
 		wr_dword(a,pop());
 
 	} else if (x >= 32) { //ZPU_EMULATE
@@ -323,7 +324,7 @@ void step()
 		}
 	}
 
-	printf("ihold = 0x%08X\n",i_hold);
+	//printf("ihold = 0x%08X\n",i_hold);
 	exec(brshift(i_hold,24));
 
 	if (!PChalt) {
@@ -340,7 +341,7 @@ void reset()
 {
 	// prepare CPU registers
 	PC = 0;
-	SP = 2097152 - 8;
+	SP = RAMSIZE - 8;
 	PChalt = 0;
 	idim = 0;
 	i_addr = -1;
@@ -367,7 +368,7 @@ int main()
     n = 0;
     while (!halt) {
         step();
-        if ((++n) % 10000 == 0) printf("%d\n",n);
+        //if ((++n) % 10000 == 0) printf("%d\n",n);
     }
     puts("\nQuit.\n");
 }

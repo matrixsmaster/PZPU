@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#define RAMSIZE (1024*1024*32/4)
+#define RAMSIZE (1024*1024*48)
 #define SCANPAT "%ld"
 typedef int64_t bint;
 
