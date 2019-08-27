@@ -87,13 +87,14 @@ int bxor(int a, int b)
     int c = 0;
     for (int x = 0; x < 32; x++) {
         c += c;
-        if (((a >= 2147483648) || (b >= 2147483648)) && ((a >= 2147483648) != (b >= 2147483648))) c++;
+        if (((a >= 2147483648) || (b >= 2147483648)) && ((a < 2147483648) || (b < 2147483648))) c++;
         a += a;
         if (a > 4294967295) a -= 4294967296;
         b += b;
         if (b > 4294967295) b -= 4294967296;
+        //printf("%d\t%d\t%d\n",a,b,c);
     }
-    //printf("%x ^ %x = %x\n",la,lb,c);
+    //printf("%d ^ %d = %d\n",la,lb,c);
     //assert(c < 4294967296);
     //assert(c == (la^lb));
     return c;
@@ -118,6 +119,7 @@ int get_dword(int addr)
 	}
 
 	if (!band(addr,3)) {
+        //printf("RAM @ %d = %d\n",brshift(addr,2),RAM[brshift(addr,2)]);
 		return RAM[brshift(addr,2)];
 	} else {
         printf("RD violation @ 0x%08X: reminder is %u",addr,band(addr,3));
@@ -152,6 +154,7 @@ void wr_dword(int addr, int w)
 //			violation(addr,0,4,"IO space access violation")
 		}
 	} else if (!band(addr,3)) {
+        //printf("Putting %d to RAM @ %d\n",band(w,4294967295),brshift(addr,2));
 		RAM[brshift(addr,2)] = band(w,4294967295);
 	} else {
 		printf("WR violation @ 0x%08X: reminder is %u",addr,band(addr,3));
@@ -238,7 +241,8 @@ void iemu(char x)
 
 void exec(int x)
 {
-    //printf("Executing %d\n",x);
+    //printf("PC = %d, SP = %d, Executing %d\n",PC,SP,x);
+    //getchar();
     
 	if (x == 0) {
 		halt = 1;
@@ -286,6 +290,7 @@ void exec(int x)
 
 	} else if (x >= 64) { //ZPU_STORESP
 		int a = sp_off(bxor(band(x,31),16));
+        //printf("StoreSP x = %d, (x&31) = %d, xor16 = %d, a = %d\n",x,band(x,31),bxor(band(x,31),16),a);
 		wr_dword(a,pop());
 
 	} else if (x >= 32) { //ZPU_EMULATE
